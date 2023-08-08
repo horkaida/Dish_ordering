@@ -102,7 +102,7 @@ def get_all_categories():
     return '.'
 
 @app.route('/admin/categories/<category>', methods=['Get', 'PUT', 'DELETE'])
-def get_category():
+def admin_get_category():
     return '.'
 
 @app.route('/admin/search', methods=['Get'])
