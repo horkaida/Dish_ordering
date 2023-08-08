@@ -1,7 +1,15 @@
-from flask import Flask
+from flask import Flask, request
+import sqlite3
+from urllib.parse import unquote
 
 app = Flask(__name__)
 
+
+def query_db(query, args=(), one=False):
+    con = sqlite3.connect("dish.db")
+    cur = con.cursor()
+    result = cur.execute(query, args).fetchall()
+    return (result[0] if result else None) if one else result
 
 @app.route('/')
 def main_page():
@@ -48,7 +56,7 @@ def get_order_from_history():
     return '.'
 
 @app.route('/user/address', methods=['GET', 'POST'])
-def get_user_address():
+def get_address():
     return '.'
 
 @app.route('/user/address/<id>', methods=['GET', 'PUT',  'POST'])
@@ -57,15 +65,20 @@ def get_user_address_by_id():
 
 @app.route('/menu', methods=['GET'])
 def get_menu():
-    return '.'
+    result = query_db("SELECT * FROM dishes")
+    return unquote(str(result))
 
 @app.route('/menu/<category_name>', methods=['GET'])
-def get_category():
-    return '.'
+def get_category(category_name):
+    category_id = query_db("SELECT * FROM Categories WHERE slug = ?", [category_name], one=True)[1]
+    result = query_db("SELECT * FROM dishes WHERE Category =?", [category_id])
+    return unquote(str(result))
 
-@app.route('/menu/<category_name>/<dish>', methods=['GET'])
-def get_dish_from_category():
-    return '.'
+
+@app.route('/menu/<category_name>/<dish_id>', methods=['GET'])
+def get_dish_from_category(category_name, dish_id):
+    result = query_db("SELECT * FROM dishes WHERE id =?", [dish_id], one=True)
+    return unquote(str(result))
 
 @app.route('/menu/<category_name>/<dish>/review', methods=['POST'])
 def create_dish_review_():
@@ -77,35 +90,49 @@ def menu_search():
 
 
 #Endpoints for Admin
-@app.route('/admin/', methods=['Get'])
+@app.route('/admin/', methods=['GET'])
 def get_admin_page():
     return '.'
 
-@app.route('/admin/dishes', methods=['Get', 'POST'])
+@app.route('/admin/dishes', methods=['GET', 'POST'])
 def get_all_dishes():
-    return '.'
+    if request.method == 'GET':
+        result = query_db("SELECT * FROM dishes")
+        return unquote(str(result))
+    else:
+        return '.'
 
-@app.route('/admin/dishes/<dish>', methods=['Get', 'PU  T', 'DELETE'])
-def get_dish():
-    return '.'
+@app.route('/admin/dishes/<dish_id>', methods=['GET', 'PUT', 'DELETE'])
+def get_dish(dish_id):
+    if request.method == 'GET':
+        result = query_db("SELECT * FROM dishes WHERE id = ?", [dish_id], one=True)
+        return unquote(str(result))
+    else:
+        return '.'
 
-@app.route('/admin/orders', methods=['Get'])
+@app.route('/admin/orders', methods=['GET'])
 def get_all_orders():
     return '.'
 
-@app.route('/admin/orders/<order>', methods=['Get', 'PUT'])
+@app.route('/admin/orders/<order>', methods=['GET', 'PUT'])
 def get_order():
     return '.'
 
-@app.route('/admin/categories', methods=['Get', 'POST'])
+@app.route('/admin/categories', methods=['GET', 'POST'])
 def get_all_categories():
-    return '.'
+    result = query_db("SELECT * FROM categories")
+    return unquote(str(result))
 
-@app.route('/admin/categories/<category>', methods=['Get', 'PUT', 'DELETE'])
-def admin_get_category():
-    return '.'
+@app.route('/admin/categories/<category_slug>', methods=['GET', 'PUT', 'DELETE'])
+def admin_get_category(category_slug):
+    if request.method == 'GET':
+        result = query_db("SELECT * FROM categories WHERE slug = ?", [category_slug], one=True)
+        return unquote(str(result))
+    else:
+        return '.'
 
-@app.route('/admin/search', methods=['Get'])
+
+@app.route('/admin/search', methods=['GET'])
 def search():
     return '.'
 
