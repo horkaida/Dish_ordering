@@ -20,19 +20,20 @@ class SQLiteDB:
         self.con.commit()
         self.con.close()
 
-    def query_db(self, query):
-        return self.cur.execute(query).fetchall()
+    def query_db(self, query, one=False):
+        result =  self.cur.execute(query).fetchall()
+        return (result[0] if result else None) if one else result
 
     def insert_into_db(self, table_name, params):
         columns = ', '.join(params.keys())
         values = ', '.join([f'"{str(i)}"' for i in params.values()])
         self.cur.execute(f"INSERT INTO {table_name} ({columns}) VALUES ({values})")
 
-    def select_from_db(self, table_name, columns:list, where=None):
+    def select_from_db(self, table_name, columns:list, where=None, one=False):
         columns = ', '.join(columns)
         query = f"SELECT {columns} FROM {table_name}"
         if where:
             where = ', '.join([f"{key}='{value}'" for key, value in where.items()])
             query += f' WHERE {where}'
-        return self.query_db(query)
+        return self.query_db(query, one)
 
