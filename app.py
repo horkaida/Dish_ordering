@@ -106,19 +106,37 @@ def get_order_from_history(id):
         with SQLiteDB('dish.db') as db:
             orders =db.select_from_db('Orders', ['*'], {'User':current_user['ID']})
             order = None
-            for o in orders:
-                if o["User"] == current_user["ID"]:
-                    order = o
+            for item in orders:
+                if item["User"] == current_user["ID"] and item["ID"] == int(id):
+                        order = item
+                else:
+                    return 'not found'
             return str(order)
     return app.redirect("/user/login", code=302)
 
 @app.route('/user/address', methods=['GET', 'POST'])
 def get_address():
-    return '.'
+    if current_user:
+        with SQLiteDB('dish.db') as db:
+            addresses =db.select_from_db('Addresses', ['*'], {'User':current_user['ID']})
+            return str(addresses)
+    return app.redirect("/user/login", code=302)
+
+
 
 @app.route('/user/address/<id>', methods=['GET', 'PUT',  'POST'])
-def get_user_address_by_id():
-    return '.'
+def get_user_address_by_id(id):
+    if current_user:
+        with SQLiteDB('dish.db') as db:
+            addresses =db.select_from_db('Orders', ['*'], {'User':current_user['ID']})
+            address = None
+            for item in addresses:
+                if item["User"] == current_user["ID"] and item["ID"] == int(id):
+                        address = item
+                else:
+                    return 'not found'
+            return str(address)
+    return app.redirect("/user/login", code=302)
 
 @app.route('/menu', methods=['GET', 'POST'])
 def get_menu():
@@ -163,15 +181,28 @@ def get_category(category_name):
 
 @app.route('/menu/<category_name>/<dish_id>', methods=['GET'])
 def get_dish_from_category(category_name, dish_id):
+    html_form = f"""
+    <form method='POST' action="/menu/{category_name}/{dish_id}/review">
+    <input type="number" name="Rate" placeholder="rate">
+    <input type="submit">
+    </form>
+    
+    <br />
+    """
     with SQLiteDB('dish.db') as db:
         print(dish_id)
         result = db.select_from_db('Dishes', ['*'], {'id':dish_id}, one=True)
-        return str(result)
+        return str(result) + html_form
 
 
-@app.route('/menu/<category_name>/<dish>/review', methods=['POST'])
-def create_dish_review_():
-    return '.'
+@app.route('/menu/<category_name>/<dish_id>/review', methods=['POST'])
+def create_dish_review_(category_name, dish_id):
+
+    with SQLiteDB('dish.db') as db:
+        data = request.form.to_dict()
+        data['Dish_id'] = dish_id
+        db.insert_into_db('Dish_rates', data)
+        return app.redirect(f'/menu/{category_name}/{dish_id}', code=302)
 
 @app.route('/menu/search', methods=['POST'])
 def menu_search():
