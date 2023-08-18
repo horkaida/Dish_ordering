@@ -46,7 +46,7 @@ def user_register():
     <form method="POST">
     <h1>Registration form </h1>
     <input type="text" name="Email" placeholder="Enter your email address">
-    <input type="text" name="Password" placeholder="Create your password">
+    <input type="password" name="Password" placeholder="Create your password">
     <input type="text" name="Phone" placeholder="Phone number">
     <input type="text" name="First_name" placeholder="First name">
     <input type="text" name="Second_name" placeholder="Second name">
@@ -63,7 +63,7 @@ def user_login():
     <form method="POST">
     <h1>Registration form </h1>
     <input type="text" name="Email" placeholder="Enter your email address">
-    <input type="text" name="Password" placeholder="Enter your password">
+    <input type="password" name="Password" placeholder="Enter your password">
     <input type="submit">
     </form>
     """
@@ -215,41 +215,67 @@ def get_admin_page():
     return '.'
 
 @app.route('/admin/dishes', methods=['GET', 'POST'])
-# def get_all_dishes():
-    # if request.method == 'GET':
-    #     result = query_db("SELECT * FROM dishes")
-    #     return unquote(str(result))
-    # else:
-    #     return '.'
+def get_all_dishes():
+    if current_user and current_user['Type'] == int(1):
+        with SQLiteDB('dish.db') as db:
+            if request.method == 'GET':
+                dishes = db.select_from_db('Dishes', ['*'])
+                return str(dishes)
+    else:
+        return app.redirect('/')
+
 
 @app.route('/admin/dishes/<dish_id>', methods=['GET', 'PUT', 'DELETE'])
-# def get_dish(dish_id):
-#     if request.method == 'GET':
-#         result = query_db("SELECT * FROM dishes WHERE id = ?", [dish_id], one=True)
-#         return unquote(str(result))
-#     else:
-#         return '.'
+def get_dish(dish_id):
+    if current_user and current_user['Type'] == int(1):
+        with SQLiteDB('dish.db') as db:
+            if request.method == 'GET':
+                dish = db.select_from_db('Dishes', ['*'], {'id':dish_id}, one=True)
+                return str(dish)
+    else:
+        return app.redirect('/')
+
 
 @app.route('/admin/orders', methods=['GET'])
 def get_all_orders():
-    return '.'
+    if current_user and current_user['Type'] == int(1):
+        with SQLiteDB('dish.db') as db:
+            if request.method == 'GET':
+                orders = db.select_from_db('Orders', ['*'])
+                return str(orders)
+    else:
+        return app.redirect('/')
 
-@app.route('/admin/orders/<order>', methods=['GET', 'PUT'])
-def get_order():
-    return '.'
+@app.route('/admin/orders/<order_id>', methods=['GET', 'PUT'])
+def get_order(order_id):
+    if current_user and current_user['Type'] == int(1):
+        with SQLiteDB('dish.db') as db:
+            if request.method == 'GET':
+                order = db.select_from_db('Orders', ['*'], {'id':order_id}, one=True)
+                return str(order)
+    else:
+        return app.redirect('/')
 
 @app.route('/admin/categories', methods=['GET', 'POST'])
-# def get_all_categories():
-#     result = query_db("SELECT * FROM categories")
-#     return unquote(str(result))
+def get_all_categories():
+    if current_user and current_user['Type'] == int(1):
+        with SQLiteDB('dish.db') as db:
+            if request.method == 'GET':
+                categories = db.select_from_db('Categories', ['*'])
+                return str(categories)
+    else:
+        return app.redirect('/')
 
 @app.route('/admin/categories/<category_slug>', methods=['GET', 'PUT', 'DELETE'])
-# def admin_get_category(category_slug):
-    # if request.method == 'GET':
-    #     result = query_db("SELECT * FROM categories WHERE slug = ?", [category_slug], one=True)
-    #     return unquote(str(result))
-    # else:
-    #     return '.'
+def admin_get_category(category_slug):
+    if current_user and current_user['Type'] == int(1):
+        with SQLiteDB('dish.db') as db:
+            if request.method == 'GET':
+                category= db.select_from_db('Categories', ['*'], {'slug':category_slug}, one=True)
+                return str(category)
+    else:
+        return app.redirect('/')
+
 
 
 @app.route('/admin/search', methods=['GET'])
