@@ -1,9 +1,7 @@
-from flask import Flask, request
-import sqlite3
-from urllib.parse import unquote
+from flask import Flask, request, session, render_template
 from database import SQLiteDB
 app = Flask(__name__)
-current_user = None
+app.secret_key = '_5#y2L"F4Q8zfdvdhbfvjdvdf]/'
 
 
 @app.route('/')
@@ -24,13 +22,8 @@ def cart_add():
 
 @app.route('/user', methods=['GET', 'POST', 'DELETE  '])
 def user():
-    if current_user:
-        return f"""
-        Hello {current_user['First_name']}
-        <form method="POST" action="/user/logout">
-        <input value="Logout" type="submit">
-        </form>
-        """
+    if session.get('ID'):
+        return render_template('base.html', user=session)
 
     return app.redirect("user/login", code=302)
 
@@ -42,33 +35,11 @@ def user_register():
             data = request.form.to_dict()
             db.insert_into_db('Users', data)
 
-    html_form = f"""
-    <form method="POST">
-    <h1>Registration form </h1>
-    <input type="text" name="Email" placeholder="Enter your email address">
-    <input type="password" name="Password" placeholder="Create your password">
-    <input type="text" name="Phone" placeholder="Phone number">
-    <input type="text" name="First_name" placeholder="First name">
-    <input type="text" name="Second_name" placeholder="Second name">
-    <input type="text" name="Tg" placeholder="Telegram">
-    <input type="submit">
-    </form>
-    """
-    return html_form
+    return render_template('registration.html')
 
 @app.route('/user/login', methods=['POST', 'GET'])
 def user_login():
-    global current_user
-    html_form = f"""
-    <form method="POST">
-    <h1>Registration form </h1>
-    <input type="text" name="Email" placeholder="Enter your email address">
-    <input type="password" name="Password" placeholder="Enter your password">
-    <input type="submit">
-    </form>
-    """
-
-    if current_user:
+    if session.get('ID'):
         return app.redirect("/user", code=302)
 
     if request.method == 'POST':
@@ -76,16 +47,16 @@ def user_login():
             data = request.form.to_dict()
             user = db.select_from_db("Users", ['*'], {'Email':data['Email']}, one=True)
             if user['Password']==data['Password']:
-                current_user = user
+                for key, value in user.items():
+                    session[key] = value
                 return app.redirect("/user", code=302)
             else:
-                return f" Incorrect credentials/n{html_form}"
+                return render_template('login.html', error='Incorrect credentials')
 
-    return html_form
+    return render_template('login.html')
 @app.route('/user/logout', methods=['POST'])
 def user_sign_out():
-    global current_user
-    current_user = None
+    session.clear()
     return app.redirect("/user/login", code=302)
 
 @app.route('/user/restore', methods=['POST'])
@@ -94,20 +65,20 @@ def user_reset_password():
 
 @app.route('/user/orders', methods=['GET'])
 def get_orders_history():
-    if current_user:
+    if session.get('ID'):
         with SQLiteDB('dish.db') as db:
-            orders =db.select_from_db('Orders', ['*'], {'User':current_user['ID']})
+            orders =db.select_from_db('Orders', ['*'], {'User':session['ID']})
             return str(orders)
     return app.redirect("/user/login", code=302)
 
 @app.route('/user/orders/<id>', methods=['GET'])
 def get_order_from_history(id):
-    if current_user:
+    if session.get('ID'):
         with SQLiteDB('dish.db') as db:
-            orders =db.select_from_db('Orders', ['*'], {'User':current_user['ID']})
+            orders =db.select_from_db('Orders', ['*'], {'User':session['ID']})
             order = None
             for item in orders:
-                if item["User"] == current_user["ID"] and item["ID"] == int(id):
+                if item["User"] == session["ID"] and item["ID"] == int(id):
                         order = item
                 else:
                     return 'not found'
@@ -116,9 +87,9 @@ def get_order_from_history(id):
 
 @app.route('/user/address', methods=['GET', 'POST'])
 def get_address():
-    if current_user:
+    if session.get('ID'):
         with SQLiteDB('dish.db') as db:
-            addresses =db.select_from_db('Addresses', ['*'], {'User':current_user['ID']})
+            addresses =db.select_from_db('Addresses', ['*'], {'User':session['ID']})
             return str(addresses)
     return app.redirect("/user/login", code=302)
 
@@ -126,12 +97,12 @@ def get_address():
 
 @app.route('/user/address/<id>', methods=['GET', 'PUT',  'POST'])
 def get_user_address_by_id(id):
-    if current_user:
+    if session.get('ID'):
         with SQLiteDB('dish.db') as db:
-            addresses =db.select_from_db('Orders', ['*'], {'User':current_user['ID']})
+            addresses =db.select_from_db('Orders', ['*'], {'User':session['ID']})
             address = None
             for item in addresses:
-                if item["User"] == current_user["ID"] and item["ID"] == int(id):
+                if item["User"] == session["ID"] and item["ID"] == int(id):
                         address = item
                 else:
                     return 'not found'
@@ -160,10 +131,10 @@ def get_menu():
     <input type="text" name="Fat" placeholder="fat">
     <input type="text" name="Carbs" placeholder="carbs">
     <input type="text" name="Average_rate" placeholder="rate">
-    
+
     <input type="submit">
     </form>
-    
+
     <br />
     {str(dishes)}
     """
@@ -186,7 +157,7 @@ def get_dish_from_category(category_name, dish_id):
     <input type="number" name="Rate" placeholder="rate">
     <input type="submit">
     </form>
-    
+
     <br />
     """
     with SQLiteDB('dish.db') as db:
@@ -216,7 +187,7 @@ def get_admin_page():
 
 @app.route('/admin/dishes', methods=['GET', 'POST'])
 def get_all_dishes():
-    if current_user and current_user['Type'] == int(1):
+    if session.get('ID') and session['Type'] == int(1):
         with SQLiteDB('dish.db') as db:
             if request.method == 'GET':
                 dishes = db.select_from_db('Dishes', ['*'])
@@ -227,7 +198,7 @@ def get_all_dishes():
 
 @app.route('/admin/dishes/<dish_id>', methods=['GET', 'PUT', 'DELETE'])
 def get_dish(dish_id):
-    if current_user and current_user['Type'] == int(1):
+    if session.get('ID') and session['Type'] == int(1):
         with SQLiteDB('dish.db') as db:
             if request.method == 'GET':
                 dish = db.select_from_db('Dishes', ['*'], {'id':dish_id}, one=True)
@@ -238,7 +209,7 @@ def get_dish(dish_id):
 
 @app.route('/admin/orders', methods=['GET'])
 def get_all_orders():
-    if current_user and current_user['Type'] == int(1):
+    if session.get('ID') and session['Type'] == int(1):
         with SQLiteDB('dish.db') as db:
             if request.method == 'GET':
                 orders = db.select_from_db('Orders', ['*'])
@@ -248,7 +219,7 @@ def get_all_orders():
 
 @app.route('/admin/orders/<order_id>', methods=['GET', 'PUT'])
 def get_order(order_id):
-    if current_user and current_user['Type'] == int(1):
+    if session.get('ID') and session['Type'] == int(1):
         with SQLiteDB('dish.db') as db:
             if request.method == 'GET':
                 order = db.select_from_db('Orders', ['*'], {'id':order_id}, one=True)
@@ -258,7 +229,7 @@ def get_order(order_id):
 
 @app.route('/admin/categories', methods=['GET', 'POST'])
 def get_all_categories():
-    if current_user and current_user['Type'] == int(1):
+    if session.get('ID') and session['Type'] == int(1):
         with SQLiteDB('dish.db') as db:
             if request.method == 'GET':
                 categories = db.select_from_db('Categories', ['*'])
@@ -268,7 +239,7 @@ def get_all_categories():
 
 @app.route('/admin/categories/<category_slug>', methods=['GET', 'PUT', 'DELETE'])
 def admin_get_category(category_slug):
-    if current_user and current_user['Type'] == int(1):
+    if session.get('ID') and session['Type'] == int(1):
         with SQLiteDB('dish.db') as db:
             if request.method == 'GET':
                 category= db.select_from_db('Categories', ['*'], {'slug':category_slug}, one=True)

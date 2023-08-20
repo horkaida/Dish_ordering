@@ -1,0 +1,45 @@
+<!doctype html>
+<title>{% block title %}{% endblock %} - Flaskr</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+
+<nav style="display: flex">
+    <div style="padding: 10px; max-width: 45px; background-color: black; color:white">
+        Menu
+    </div>
+    <div style="padding: 10px; max-width: 45px; background-color: black; color:white">
+        Cart
+    </div>
+    {% if user %}
+        <div><p>Hello {{ user.First_name }} {{ user.Second_name }}</p></div>
+    {% if user.ID == 1 %}
+        <div style="padding: 10px; max-width: 45px; background-color: black; color:white">
+            Admin Panel
+        </div>
+    {% endif  %}
+
+        <div>
+        <form method="POST" action="/user/logout">
+            <input value="Logout" type="submit">
+        </form>
+        </div>
+    {% else %}
+        <a href="{{ url_for('user_login') }}">
+             <div style="padding: 10px; max-width: 45px; background-color: pink; color:blue">
+                    Login
+            </div>
+        </a>
+            {#      <li><a href="{{ url_for('auth.register') }}">Register</a>#}
+            {#      <li><a href="{{ url_for('auth.login') }}">Log In</a>#}
+    {% endif  %}
+</nav>
+    <h1>Dishes from all Countrishes</h1>
+<section class="content">
+    <header>
+        {% block header %}{% endblock %}
+    </header>
+    {#  {% for message in get_flashed_messages() %}#}
+    {#    <div class="flash">{{ message }}</div>#}
+    {#  {% endfor %}#}
+    {% block content %}{% endblock %}
+</section>
