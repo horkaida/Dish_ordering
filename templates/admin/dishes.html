@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'admin/admin.html' %}
 
 {% block content %}
     <div class="row">
@@ -11,12 +11,10 @@
                 <a href="{{ url_for("get_category", category_name=dish.category_info.slug) }}"><p>{{ dish.category_info.name }}</p></a>
                 <p>{{ dish.Description}}</p>
                 <p>
-                    <button>Add to Cart</button>
+                    <a href="{{ url_for('get_dish_admin', dish_id=dish.ID) }}"><button>Редагувати</button></a>
                 </p>
             </div>
         </div>
     {% endfor %}
     </div>
-
-
 {% endblock %}

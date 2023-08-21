@@ -6,7 +6,7 @@ app.secret_key = '_5#y2L"F4Q8zfdvdhbfvjdvdf]/'
 
 @app.route('/')
 def main_page():
-    return 'Main page'
+    return render_template('main.html')
 
 @app.route('/cart', methods=['GET', 'PUT'])
 def get_cart():
@@ -115,59 +115,34 @@ def get_menu():
         if request.method == 'POST':
             data = request.form.to_dict()
             db.insert_into_db('Dishes', data)
-
         dishes = db.select_from_db('Dishes', ['*'])
+        categories = db.select_from_db('Categories', ['*'])
+        for dish in dishes:
+            dish['category_info'] = next(x for x in categories if x['id'] == dish['Category'])
+        return render_template("menu.html", dishes=dishes, user=session)
 
-    html_form = f"""
-    <form method="POST">
-    <input type="text" name="Dish_name" placeholder="name">
-    <input type="text" name="Price" placeholder="price">
-    <input type="text" name="Description" placeholder="description">
-    <input type="text" name="Available" placeholder="availability">
-    <input type="text" name="Category" placeholder="category">
-    <input type="text" name="Photo" placeholder="photo">
-    <input type="text" name="Ccal" placeholder="ccal">
-    <input type="text" name="Protein" placeholder="protein">
-    <input type="text" name="Fat" placeholder="fat">
-    <input type="text" name="Carbs" placeholder="carbs">
-    <input type="text" name="Average_rate" placeholder="rate">
-
-    <input type="submit">
-    </form>
-
-    <br />
-    {str(dishes)}
-    """
-    return html_form
 
 
 @app.route('/menu/<category_name>', methods=['GET'])
 def get_category(category_name):
     with SQLiteDB('dish.db') as db:
-        category_id = db.select_from_db('Categories', ['id'], {'slug':category_name}, one=True)
-        print(category_id)
-        result = db.select_from_db('Dishes', ['*'], {'Category':category_id['id']})
-        return str(result)
+        category = db.select_from_db('Categories', ["*"], {'slug':category_name}, one=True)
+        dishes = db.select_from_db('Dishes', ['*'], {'Category':category['id']})
+        for dish in dishes:
+            dish['category_info'] = category
+        return render_template('menu.html', dishes=dishes, user=session)
 
 
 @app.route('/menu/<category_name>/<dish_id>', methods=['GET'])
 def get_dish_from_category(category_name, dish_id):
-    html_form = f"""
-    <form method='POST' action="/menu/{category_name}/{dish_id}/review">
-    <input type="number" name="Rate" placeholder="rate">
-    <input type="submit">
-    </form>
-
-    <br />
-    """
     with SQLiteDB('dish.db') as db:
-        print(dish_id)
-        result = db.select_from_db('Dishes', ['*'], {'id':dish_id}, one=True)
-        return str(result) + html_form
+        dish = db.select_from_db('Dishes', ['*'], {'id':dish_id}, one=True)
+        dish['category_info'] = db.select_from_db('Categories', ["*"], {'slug':category_name}, one=True)
+        return render_template('dish.html', dish=dish, user=session)
 
 
 @app.route('/menu/<category_name>/<dish_id>/review', methods=['POST'])
-def create_dish_review_(category_name, dish_id):
+def dish_review(category_name, dish_id):
 
     with SQLiteDB('dish.db') as db:
         data = request.form.to_dict()
@@ -183,7 +158,7 @@ def menu_search():
 #Endpoints for Admin
 @app.route('/admin/', methods=['GET'])
 def get_admin_page():
-    return '.'
+    return render_template('admin/admin.html', user=session)
 
 @app.route('/admin/dishes', methods=['GET', 'POST'])
 def get_all_dishes():
@@ -191,13 +166,16 @@ def get_all_dishes():
         with SQLiteDB('dish.db') as db:
             if request.method == 'GET':
                 dishes = db.select_from_db('Dishes', ['*'])
-                return str(dishes)
+                categories = db.select_from_db('Categories', ['*'])
+                for dish in dishes:
+                    dish['category_info'] = next(x for x in categories if x['id'] == dish['Category'])
+                return render_template('admin/dishes.html', dishes=dishes, user=session)
     else:
         return app.redirect('/')
 
 
 @app.route('/admin/dishes/<dish_id>', methods=['GET', 'PUT', 'DELETE'])
-def get_dish(dish_id):
+def get_dish_admin(dish_id):
     if session.get('ID') and session['Type'] == int(1):
         with SQLiteDB('dish.db') as db:
             if request.method == 'GET':

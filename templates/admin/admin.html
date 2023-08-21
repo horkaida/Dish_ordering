@@ -1,0 +1,29 @@
+<!doctype html>
+<title>{% block title %}{% endblock %} - Flaskr</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<nav class="navbar admin-navbar">
+    <a href="/">Головна</a>
+    <a href="/admin/dishes">Страви</a>
+    <a href="/admin/categories">Категорії</a>
+    <div class="user-part">
+        {% if user %}
+            <a href="/user/">Привіт, {{ user.First_name }}!</a>
+            <div>
+                <form method="POST" action="/user/logout">
+                    <input value="Logout" type="submit">
+                </form>
+            </div>
+        {% else %}
+            <a href="{{ url_for('user_login') }}">Увійти</a>
+            <a href="{{ url_for('user_register') }}">Регістрація</a>
+        {% endif %}
+    </div>
+</nav>
+<section class="content">
+    <header>
+        {% block header %}{% endblock %}
+    </header>
+    {% block content %}{% endblock %}
+</section>
