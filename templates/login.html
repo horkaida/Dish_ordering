@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    {% if error %}
+        <p style="color: red">{{ error }}</p>
+    {% endif %}
+    <form method="POST">
+        <div class="form-container">
+            <h1>Login: </h1>
+            <label for="email"><b>Email Address</b></label>
+            <input type="text" name="Email" placeholder="Enter your email address" id="email" required>
+
+            <label for="pswrd"><b>Password</b></label>
+            <input type="password" name="Password" placeholder="Enter your password" id="pswrd" required>
+
+            <button type="submit" class="registerbtn">Login</button>
+
+            <div class="form-container signin">
+                <p>Do not have an account? <a href="{{ url_for('user_register')}}">Sign in</a>.</p>
+            </div>
+        </div>
+    </form>
+{% endblock %}

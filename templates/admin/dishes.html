@@ -1,0 +1,22 @@
+{% extends 'admin/admin.html' %}
+
+{% block content %}
+    <div class="row">
+        {% for dish in dishes %}
+            <div class="column">
+                <div class="card">
+                    <img src="{{ dish.Image }}" alt="{{ dish.Dish_name }}" style="width:100%">
+                    <h1>{{ dish.Dish_name }}</h1>
+                    <p class="price">{{ dish.Price }}</p>
+                    <p>{{ dish.category_info.name }}</p>
+                    <p>{{ dish.Description }}</p>
+                    <p>
+                        <a href="{{ url_for('get_dish_admin', dish_id=dish.ID) }}">
+                            <button>Редагувати</button>
+                        </a>
+                    </p>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}

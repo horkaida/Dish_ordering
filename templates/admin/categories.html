@@ -1,0 +1,29 @@
+{% extends 'admin/admin.html' %}
+
+{% block content %}
+    <h2>Категорії</h2>
+
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Назва</th>
+            <th>Слаг</th>
+        </tr>
+
+        {% for category in categories %}
+            <tr>
+                <td><a href={{ url_for("admin_get_category", category_slug=category.slug) }}> {{ category.id }}</a></td>
+                <td>{{ category.name }}</td>
+                <td>{{ category.slug }}</td>
+
+
+
+            </tr>
+        {% endfor %}
+
+
+    </table>
+
+
+
+{% endblock %}

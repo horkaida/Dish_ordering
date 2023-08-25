@@ -1,0 +1,43 @@
+<!doctype html>
+<title>{% block title %}{% endblock %} - Flaskr</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<nav class="navbar">
+    <a href="/">Головна</a>
+    <div class="subnav">
+        <button class="subnavbtn"><a class="subnav-link" href="/menu">Меню </a><i class="fa fa-caret-down"></i></button>
+        <div class="subnav-content">
+            <a href="/menu/osnovni_stravy">Основні страви</a>
+            <a href="/menu/startery">Стартери</a>
+            <a href="/menu/napoyi">Напої</a>
+            <a href="/menu/deserty">Десерти</a>
+        </div>
+    </div>
+    <a href="/cart">Кошик</a>
+    <a href="/user/orders">Замовлення</a>
+    <div class="user-part">
+        {% if user %}
+       <a href="/user">Привіт, {{ user.First_name }}!</a>
+    {% if user.ID == 1 %}
+        <a href="/admin/">Адмінпанель</a>
+    {% endif  %}
+        <div>
+            <form method="POST" action="/user/logout">
+                <input value="Logout" type="submit">
+            </form>
+        </div>
+    {% else %}
+        <a href="{{ url_for('user_login') }}">Увійти</a>
+        <a href="{{ url_for('user_register') }}">Регістрація</a>
+    {% endif  %}
+    </div>
+</nav>
+    <h1>Dishes from all Countrishes</h1>
+<section class="content">
+    <header>
+        {% block header %}{% endblock %}
+    </header>
+    {% block content %}{% endblock %}
+</section>

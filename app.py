@@ -1,14 +1,12 @@
-from flask import Flask, request
-import sqlite3
-from urllib.parse import unquote
+from flask import Flask, request, session, render_template
 from database import SQLiteDB
 app = Flask(__name__)
-current_user = None
+app.secret_key = '_5#y2L"F4Q8zfdvdhbfvjdvdf]/'
 
 
 @app.route('/')
 def main_page():
-    return 'Main page'
+    return render_template('main.html', user=session)
 
 @app.route('/cart', methods=['GET', 'PUT'])
 def get_cart():
@@ -24,13 +22,8 @@ def cart_add():
 
 @app.route('/user', methods=['GET', 'POST', 'DELETE  '])
 def user():
-    if current_user:
-        return f"""
-        Hello {current_user['First_name']}
-        <form method="POST" action="/user/logout">
-        <input value="Logout" type="submit">
-        </form>
-        """
+    if session.get('ID'):
+        return render_template('user.html', user=session)
 
     return app.redirect("user/login", code=302)
 
@@ -42,33 +35,11 @@ def user_register():
             data = request.form.to_dict()
             db.insert_into_db('Users', data)
 
-    html_form = f"""
-    <form method="POST">
-    <h1>Registration form </h1>
-    <input type="text" name="Email" placeholder="Enter your email address">
-    <input type="password" name="Password" placeholder="Create your password">
-    <input type="text" name="Phone" placeholder="Phone number">
-    <input type="text" name="First_name" placeholder="First name">
-    <input type="text" name="Second_name" placeholder="Second name">
-    <input type="text" name="Tg" placeholder="Telegram">
-    <input type="submit">
-    </form>
-    """
-    return html_form
+    return render_template('registration.html')
 
 @app.route('/user/login', methods=['POST', 'GET'])
 def user_login():
-    global current_user
-    html_form = f"""
-    <form method="POST">
-    <h1>Registration form </h1>
-    <input type="text" name="Email" placeholder="Enter your email address">
-    <input type="password" name="Password" placeholder="Enter your password">
-    <input type="submit">
-    </form>
-    """
-
-    if current_user:
+    if session.get('ID'):
         return app.redirect("/user", code=302)
 
     if request.method == 'POST':
@@ -76,16 +47,16 @@ def user_login():
             data = request.form.to_dict()
             user = db.select_from_db("Users", ['*'], {'Email':data['Email']}, one=True)
             if user['Password']==data['Password']:
-                current_user = user
+                for key, value in user.items():
+                    session[key] = value
                 return app.redirect("/user", code=302)
             else:
-                return f" Incorrect credentials/n{html_form}"
+                return render_template('login.html', error='Incorrect credentials')
 
-    return html_form
+    return render_template('login.html')
 @app.route('/user/logout', methods=['POST'])
 def user_sign_out():
-    global current_user
-    current_user = None
+    session.clear()
     return app.redirect("/user/login", code=302)
 
 @app.route('/user/restore', methods=['POST'])
@@ -94,48 +65,44 @@ def user_reset_password():
 
 @app.route('/user/orders', methods=['GET'])
 def get_orders_history():
-    if current_user:
+    if session.get('ID'):
         with SQLiteDB('dish.db') as db:
-            orders =db.select_from_db('Orders', ['*'], {'User':current_user['ID']})
-            return str(orders)
+            orders =db.select_from_db('Orders', ['*'], {'User':session['ID']})
+            return render_template('orders.html', orders=orders, user=session)
     return app.redirect("/user/login", code=302)
 
 @app.route('/user/orders/<id>', methods=['GET'])
 def get_order_from_history(id):
-    if current_user:
+    if session.get('ID'):
         with SQLiteDB('dish.db') as db:
-            orders =db.select_from_db('Orders', ['*'], {'User':current_user['ID']})
+            orders =db.select_from_db('Orders', ['*'], {'User':session['ID']})
             order = None
             for item in orders:
-                if item["User"] == current_user["ID"] and item["ID"] == int(id):
-                        order = item
-                else:
-                    return 'not found'
-            return str(order)
+                if item["ID"] == int(id):
+                    order = item
+            return render_template('order.html', order=order, user=session)
     return app.redirect("/user/login", code=302)
 
 @app.route('/user/address', methods=['GET', 'POST'])
 def get_address():
-    if current_user:
+    if session.get('ID'):
         with SQLiteDB('dish.db') as db:
-            addresses =db.select_from_db('Addresses', ['*'], {'User':current_user['ID']})
-            return str(addresses)
+            addresses =db.select_from_db('Addresses', ['*'], {'User':session['ID']})
+            return render_template('addresses.html', addresses=addresses, user=session)
     return app.redirect("/user/login", code=302)
 
 
 
 @app.route('/user/address/<id>', methods=['GET', 'PUT',  'POST'])
 def get_user_address_by_id(id):
-    if current_user:
+    if session.get('ID'):
         with SQLiteDB('dish.db') as db:
-            addresses =db.select_from_db('Orders', ['*'], {'User':current_user['ID']})
+            addresses =db.select_from_db('Addresses', ['*'], {'User':session['ID']})
             address = None
             for item in addresses:
-                if item["User"] == current_user["ID"] and item["ID"] == int(id):
-                        address = item
-                else:
-                    return 'not found'
-            return str(address)
+                if item["ID"] == int(id):
+                    address = item
+            return render_template('address.html', address=address, user=session)
     return app.redirect("/user/login", code=302)
 
 @app.route('/menu', methods=['GET', 'POST'])
@@ -144,59 +111,34 @@ def get_menu():
         if request.method == 'POST':
             data = request.form.to_dict()
             db.insert_into_db('Dishes', data)
-
         dishes = db.select_from_db('Dishes', ['*'])
+        categories = db.select_from_db('Categories', ['*'])
+        for dish in dishes:
+            dish['category_info'] = next(x for x in categories if x['id'] == dish['Category'])
+        return render_template("menu.html", dishes=dishes, user=session)
 
-    html_form = f"""
-    <form method="POST">
-    <input type="text" name="Dish_name" placeholder="name">
-    <input type="text" name="Price" placeholder="price">
-    <input type="text" name="Description" placeholder="description">
-    <input type="text" name="Available" placeholder="availability">
-    <input type="text" name="Category" placeholder="category">
-    <input type="text" name="Photo" placeholder="photo">
-    <input type="text" name="Ccal" placeholder="ccal">
-    <input type="text" name="Protein" placeholder="protein">
-    <input type="text" name="Fat" placeholder="fat">
-    <input type="text" name="Carbs" placeholder="carbs">
-    <input type="text" name="Average_rate" placeholder="rate">
-    
-    <input type="submit">
-    </form>
-    
-    <br />
-    {str(dishes)}
-    """
-    return html_form
 
 
 @app.route('/menu/<category_name>', methods=['GET'])
 def get_category(category_name):
     with SQLiteDB('dish.db') as db:
-        category_id = db.select_from_db('Categories', ['id'], {'slug':category_name}, one=True)
-        print(category_id)
-        result = db.select_from_db('Dishes', ['*'], {'Category':category_id['id']})
-        return str(result)
+        category = db.select_from_db('Categories', ["*"], {'slug':category_name}, one=True)
+        dishes = db.select_from_db('Dishes', ['*'], {'Category':category['id']})
+        for dish in dishes:
+            dish['category_info'] = category
+        return render_template('menu.html', dishes=dishes, user=session)
 
 
 @app.route('/menu/<category_name>/<dish_id>', methods=['GET'])
 def get_dish_from_category(category_name, dish_id):
-    html_form = f"""
-    <form method='POST' action="/menu/{category_name}/{dish_id}/review">
-    <input type="number" name="Rate" placeholder="rate">
-    <input type="submit">
-    </form>
-    
-    <br />
-    """
     with SQLiteDB('dish.db') as db:
-        print(dish_id)
-        result = db.select_from_db('Dishes', ['*'], {'id':dish_id}, one=True)
-        return str(result) + html_form
+        dish = db.select_from_db('Dishes', ['*'], {'id':dish_id}, one=True)
+        dish['category_info'] = db.select_from_db('Categories', ["*"], {'slug':category_name}, one=True)
+        return render_template('dish.html', dish=dish, user=session)
 
 
 @app.route('/menu/<category_name>/<dish_id>/review', methods=['POST'])
-def create_dish_review_(category_name, dish_id):
+def dish_review(category_name, dish_id):
 
     with SQLiteDB('dish.db') as db:
         data = request.form.to_dict()
@@ -212,67 +154,71 @@ def menu_search():
 #Endpoints for Admin
 @app.route('/admin/', methods=['GET'])
 def get_admin_page():
-    return '.'
+    return render_template('admin/admin.html', user=session)
 
 @app.route('/admin/dishes', methods=['GET', 'POST'])
 def get_all_dishes():
-    if current_user and current_user['Type'] == int(1):
+    if session.get('ID') and session['Type'] == int(1):
         with SQLiteDB('dish.db') as db:
             if request.method == 'GET':
                 dishes = db.select_from_db('Dishes', ['*'])
-                return str(dishes)
+                categories = db.select_from_db('Categories', ['*'])
+                for dish in dishes:
+                    dish['category_info'] = next(x for x in categories if x['id'] == dish['Category'])
+                return render_template('admin/dishes.html', dishes=dishes, user=session)
     else:
         return app.redirect('/')
 
 
 @app.route('/admin/dishes/<dish_id>', methods=['GET', 'PUT', 'DELETE'])
-def get_dish(dish_id):
-    if current_user and current_user['Type'] == int(1):
+def get_dish_admin(dish_id):
+    if session.get('ID') and session['Type'] == int(1):
         with SQLiteDB('dish.db') as db:
             if request.method == 'GET':
                 dish = db.select_from_db('Dishes', ['*'], {'id':dish_id}, one=True)
-                return str(dish)
+                categories = db.select_from_db('Categories', ['*'])
+                return render_template("admin/dish.html", dish=dish, categories=categories, user=session)
     else:
         return app.redirect('/')
 
 
 @app.route('/admin/orders', methods=['GET'])
 def get_all_orders():
-    if current_user and current_user['Type'] == int(1):
+    if session.get('ID') and session['Type'] == int(1):
         with SQLiteDB('dish.db') as db:
             if request.method == 'GET':
                 orders = db.select_from_db('Orders', ['*'])
-                return str(orders)
+                return render_template('admin/orders.html', orders=orders, user=session)
     else:
         return app.redirect('/')
 
-@app.route('/admin/orders/<order_id>', methods=['GET', 'PUT'])
-def get_order(order_id):
-    if current_user and current_user['Type'] == int(1):
+@app.route('/admin/orders/<id>', methods=['GET', 'PUT'])
+def get_admin_order(id):
+    if session.get('ID') and session['Type'] == int(1):
         with SQLiteDB('dish.db') as db:
             if request.method == 'GET':
-                order = db.select_from_db('Orders', ['*'], {'id':order_id}, one=True)
-                return str(order)
+                order = db.select_from_db('Orders', ['*'], {'id':id}, one=True)
+                return render_template('admin/order.html', order=order, user=session )
     else:
         return app.redirect('/')
 
 @app.route('/admin/categories', methods=['GET', 'POST'])
 def get_all_categories():
-    if current_user and current_user['Type'] == int(1):
+    if session.get('ID') and session['Type'] == int(1):
         with SQLiteDB('dish.db') as db:
             if request.method == 'GET':
                 categories = db.select_from_db('Categories', ['*'])
-                return str(categories)
+                return render_template('admin/categories.html', categories=categories, user=session)
     else:
         return app.redirect('/')
 
 @app.route('/admin/categories/<category_slug>', methods=['GET', 'PUT', 'DELETE'])
 def admin_get_category(category_slug):
-    if current_user and current_user['Type'] == int(1):
+    if session.get('ID') and session['Type'] == int(1):
         with SQLiteDB('dish.db') as db:
             if request.method == 'GET':
                 category= db.select_from_db('Categories', ['*'], {'slug':category_slug}, one=True)
-                return str(category)
+                return render_template('admin/category.html', category=category, user=session)
     else:
         return app.redirect('/')
 
