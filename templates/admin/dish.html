@@ -1,20 +1,48 @@
 {% extends 'admin/admin.html' %}
 
 {% block content %}
-      <div class="card">
-        <img src="{{ dish.Image }}" alt="{{ dish.Dish_name }}" style="width:100%">
-        <a href="{{ url_for("get_dish_from_category", category_name=dish.category_info.slug, dish_id=dish.ID) }}">
-            <h1>{{ dish.Dish_name }}</h1></a>
-        <p class="price">{{ dish.Price }}</p>
-        <a href="{{ url_for("get_category", category_name=dish.category_info.slug) }}">
-            <p>{{ dish.category_info.name }}</p></a>
-        <p>{{ dish.Description }}</p>
-        <form method='POST' action="{{ url_for('dish_review', category_name=dish.category_info.slug, dish_id=dish.ID) }}">
-            <input type="number" name="rate" placeholder="Оцінка" required>
-            <input type="submit">
-        </form>
-        <p>
-            <button>Add to Cart</button>
-        </p>
+    <form method="POST">
+        <div class="form-container">
+            <label for="img"><b>Зображення</b></label>
+                <input type="text" name="Photo" value="{{ dish.Photo }}" id="img" >
+
+            <label for="name"><b>Назва</b></label>
+                <input type="text" name="Dish_name" value="{{ dish.Dish_name }}" id="name" required>
+
+            <label for="price"><b>Ціна</b></label>
+                <input type="text" name="Price" value="{{ dish.Price }}" id="price" required>
+
+            <label for="description"><b>Опис</b></label>
+                <input type="text" name="Description" value="{{ dish.Description }}" id="description" required>
+
+            <label for="available"><b>Наявність</b></label>
+                <input type="text" name="Available" value="{{ dish.Available }}" id="available" required>
+
+            <label for="category"><b>Категорія</b></label>
+                <select name="Category" id="category" required>
+                    {% for category in categories %}
+                        {% if dish.Category == category.id %}
+                        <option value="{{ category.id }}" selected> {{ category.name }}</option>
+                        {% else %}
+                        <option value="{{ category.id }}"> {{ category.name }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+
+            <label for="ccal"><b>Калорії</b></label>
+                <input type="text" name="Ccal" value="{{ dish.Ccal }}" id="ccal" required>
+
+            <label for="protein"><b>Білки</b></label>
+                <input type="text" name="Protein" value="{{ dish.Protein }}" id="protein" required>
+
+            <label for="fat"><b>Жири</b></label>
+                <input type="text" name="Fat" value="{{ dish.Fat }}" id="fat" required>
+
+            <label for="carbs"><b>Вyглеводи</b></label>
+                <input type="text" name="Carbs" value="{{ dish.Carbs }}" id="carbs" required>
+
+            <button type="submit" class="registerbtn">Зберегти</button>
+
     </div>
+    </form>
 {% endblock %}

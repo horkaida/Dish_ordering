@@ -6,7 +6,7 @@ app.secret_key = '_5#y2L"F4Q8zfdvdhbfvjdvdf]/'
 
 @app.route('/')
 def main_page():
-    return render_template('main.html')
+    return render_template('main.html', user=session)
 
 @app.route('/cart', methods=['GET', 'PUT'])
 def get_cart():
@@ -23,7 +23,7 @@ def cart_add():
 @app.route('/user', methods=['GET', 'POST', 'DELETE  '])
 def user():
     if session.get('ID'):
-        return render_template('base.html', user=session)
+        return render_template('user.html', user=session)
 
     return app.redirect("user/login", code=302)
 
@@ -68,7 +68,7 @@ def get_orders_history():
     if session.get('ID'):
         with SQLiteDB('dish.db') as db:
             orders =db.select_from_db('Orders', ['*'], {'User':session['ID']})
-            return str(orders)
+            return render_template('orders.html', orders=orders, user=session)
     return app.redirect("/user/login", code=302)
 
 @app.route('/user/orders/<id>', methods=['GET'])
@@ -78,11 +78,9 @@ def get_order_from_history(id):
             orders =db.select_from_db('Orders', ['*'], {'User':session['ID']})
             order = None
             for item in orders:
-                if item["User"] == session["ID"] and item["ID"] == int(id):
-                        order = item
-                else:
-                    return 'not found'
-            return str(order)
+                if item["ID"] == int(id):
+                    order = item
+            return render_template('order.html', order=order, user=session)
     return app.redirect("/user/login", code=302)
 
 @app.route('/user/address', methods=['GET', 'POST'])
@@ -90,7 +88,7 @@ def get_address():
     if session.get('ID'):
         with SQLiteDB('dish.db') as db:
             addresses =db.select_from_db('Addresses', ['*'], {'User':session['ID']})
-            return str(addresses)
+            return render_template('addresses.html', addresses=addresses, user=session)
     return app.redirect("/user/login", code=302)
 
 
@@ -99,14 +97,12 @@ def get_address():
 def get_user_address_by_id(id):
     if session.get('ID'):
         with SQLiteDB('dish.db') as db:
-            addresses =db.select_from_db('Orders', ['*'], {'User':session['ID']})
+            addresses =db.select_from_db('Addresses', ['*'], {'User':session['ID']})
             address = None
             for item in addresses:
-                if item["User"] == session["ID"] and item["ID"] == int(id):
-                        address = item
-                else:
-                    return 'not found'
-            return str(address)
+                if item["ID"] == int(id):
+                    address = item
+            return render_template('address.html', address=address, user=session)
     return app.redirect("/user/login", code=302)
 
 @app.route('/menu', methods=['GET', 'POST'])
@@ -180,7 +176,8 @@ def get_dish_admin(dish_id):
         with SQLiteDB('dish.db') as db:
             if request.method == 'GET':
                 dish = db.select_from_db('Dishes', ['*'], {'id':dish_id}, one=True)
-                return str(dish)
+                categories = db.select_from_db('Categories', ['*'])
+                return render_template("admin/dish.html", dish=dish, categories=categories, user=session)
     else:
         return app.redirect('/')
 
@@ -191,17 +188,17 @@ def get_all_orders():
         with SQLiteDB('dish.db') as db:
             if request.method == 'GET':
                 orders = db.select_from_db('Orders', ['*'])
-                return str(orders)
+                return render_template('admin/orders.html', orders=orders, user=session)
     else:
         return app.redirect('/')
 
-@app.route('/admin/orders/<order_id>', methods=['GET', 'PUT'])
-def get_order(order_id):
+@app.route('/admin/orders/<id>', methods=['GET', 'PUT'])
+def get_admin_order(id):
     if session.get('ID') and session['Type'] == int(1):
         with SQLiteDB('dish.db') as db:
             if request.method == 'GET':
-                order = db.select_from_db('Orders', ['*'], {'id':order_id}, one=True)
-                return str(order)
+                order = db.select_from_db('Orders', ['*'], {'id':id}, one=True)
+                return render_template('admin/order.html', order=order, user=session )
     else:
         return app.redirect('/')
 
@@ -211,7 +208,7 @@ def get_all_categories():
         with SQLiteDB('dish.db') as db:
             if request.method == 'GET':
                 categories = db.select_from_db('Categories', ['*'])
-                return str(categories)
+                return render_template('admin/categories.html', categories=categories, user=session)
     else:
         return app.redirect('/')
 
@@ -221,7 +218,7 @@ def admin_get_category(category_slug):
         with SQLiteDB('dish.db') as db:
             if request.method == 'GET':
                 category= db.select_from_db('Categories', ['*'], {'slug':category_slug}, one=True)
-                return str(category)
+                return render_template('admin/category.html', category=category, user=session)
     else:
         return app.redirect('/')
 

@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>Ваші адреси</h2>
+
+    <table>
+        <tr>
+            <th>Місто</th>
+            <th>Вулиця</th>
+            <th>Будівля</th>
+            <th>Квартира</th>
+            <th>Під'їзд</th>
+            <th>Поверх</th>
+            <th></th>
+        </tr>
+
+        {% for address in addresses %}
+            <tr>
+                <td>{{ address.City }}</td>
+                <td>{{ address.Street }}</td>
+                <td>{{ address.Building }}</td>
+                <td>{{ address.Apt }}</td>
+                <td>{{ address.Entrance }}</td>
+                <td>{{ address.Floor }}</td>
+                <td><a href="{{ url_for("get_user_address_by_id", id=address.ID) }}">Змінити</a></td>
+
+            </tr>
+    {% endfor %}
+    </table>
+
+
+{% endblock %}

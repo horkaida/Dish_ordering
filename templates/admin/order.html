@@ -1,0 +1,36 @@
+{% extends 'admin/admin.html' %}
+
+{% block content %}
+    <h2>Замовлення</h2>
+
+    <table>
+        <tr>
+            <th>Номер замовлення</th>
+            <th>Ціна</th>
+            <th>Адреса</th>
+            <th>Білки</th>
+            <th>Жири</th>
+            <th>Вуглеводи</th>
+            <th>Калорії</th>
+            <th>Коментар</th>
+            <th>Дата створення</th>
+            <th>Оцінка</th>
+        </tr>
+
+            <tr>
+                <td>{{ order.ID }}</td>
+                <td>{{ order.Price }}</td>
+                <td>{{ order.Address }}</td>
+                <td>{{ order.Protein }}</td>
+                <td>{{ order.Fat }}</td>
+                <td>{{ order.Carb }}</td>
+                <td>{{ order.Ccal }}</td>
+                <td>{{ order.Comment }}</td>
+                <td>{{ order.Created_at }}</td>
+                <td>{{ order.Rate }}</td>
+
+            </tr>
+    </table>
+
+
+{% endblock %}

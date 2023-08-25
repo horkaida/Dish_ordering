@@ -11,7 +11,7 @@
 }
 
 /* Full-width input fields */
-input[type=text], input[type=password] {
+input[type=text], input[type=password], select {
     width: 100%;
     padding: 15px;
     margin: 5px 0 22px 0;
@@ -209,4 +209,20 @@ body {
         display: block;
         margin-bottom: 20px;
     }
+}
+
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+    width: 100%;
+    border: 1px solid #ddd;
+}
+
+th, td {
+    text-align: left;
+    padding: 16px;
+}
+
+tr:nth-child(even) {
+    background-color: #f2f2f2;
 }

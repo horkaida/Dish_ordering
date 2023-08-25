@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>Адреса</h2>
+        {% if address %}
+            <form method="POST">
+            <div class="form-container">
+                <label for="city"><b>Місто</b></label>
+                <input type="text" name="City" value="{{ address.City }}" id="city" required>
+
+                <label for="street"><b>Вулиця</b></label>
+                <input type="text" name="Street" value="{{ address.Street }}" id="street" required>
+
+                <label for="bldng"><b>Будівля</b></label>
+                <input type="text" name="Building" value="{{ address.Building }}" id="bldng" required>
+
+                <label for="apt"><b>Квартира</b></label>
+                <input type="text" name="Apt" value="{{ address.Apt }}" id="apt" required>
+
+                <label for="entrance"><b>Під'їзд</b></label>
+                <input type="text" name="Entrance" value="{{ address.Entrance }}" id="entrance" required>
+
+                <label for="floor"><b>Поверх</b></label>
+                <input type="text" name="Floor" value="{{ address.Floor }}" id="floor" required>
+
+                <button type="submit" class="registerbtn">Зберегти</button>
+
+            </div>
+            </form>
+        {% else %}
+        <h2>Not Found</h2>
+        {% endif %}
+
+
+{% endblock %}
