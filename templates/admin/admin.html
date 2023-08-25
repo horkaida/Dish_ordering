@@ -10,7 +10,7 @@
     <a href="/admin/orders">Замовлення</a>
     <div class="user-part">
         {% if user %}
-            <a href="/user/">Привіт, {{ user.First_name }}!</a>
+            <a href="/user">Привіт, {{ user.First_name }}!</a>
             <div>
                 <form method="POST" action="/user/logout">
                     <input value="Logout" type="submit">
