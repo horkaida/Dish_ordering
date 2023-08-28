@@ -37,3 +37,20 @@ class SQLiteDB:
             query += f' WHERE {where}'
         return self.query_db(query, one)
 
+    def delete_from_db(self, table_name, where=None, one=False):
+        query = f"DELETE FROM {table_name}"
+        if  where:
+            where = ', '.join([f"{key}='{value}'" for key, value in where.items()])
+            query += f' WHERE {where}'
+        return self.query_db(query, one)
+
+    def update_db(self, table_name, columns:dict, where=None, one=False):
+        columns = ', '.join([f"{key}='{value}'" for key, value in columns.items()])
+        query = f"UPDATE {table_name} SET {columns}"
+        if  where:
+            where = ', '.join([f"{key}='{value}'" for key, value in where.items()])
+            query += f' WHERE {where}'
+        return self.query_db(query, one)
+
+# db = SQLiteDB('dish.db')
+# db.update_db('Statuses', {'status':'cahhrt'}, {'id':0})

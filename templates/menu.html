@@ -2,20 +2,32 @@
 
 {% block content %}
     <div class="row">
-    {% for dish in dishes %}
-        <div class="column">
-            <div class="card">
-               <img src="{{ dish.Image }}" alt="{{ dish.Dish_name }}" style="width:100%">
-                <a href="{{ url_for("get_dish_from_category", category_name=dish.category_info.slug, dish_id=dish.ID)}}"><h1>{{ dish.Dish_name }}</h1></a>
-                <p class="price">{{ dish.Price }}</p>
-                <a href="{{ url_for("get_category", category_name=dish.category_info.slug) }}"><p>{{ dish.category_info.name }}</p></a>
-                <p>{{ dish.Description}}</p>
-                <p>
-                    <button>Add to Cart</button>
-                </p>
+        {% for dish in dishes %}
+            <div class="column">
+                <div class="card">
+                    <img src="{{ dish.Image }}" alt="{{ dish.Dish_name }}" style="width:100%">
+                    <a href="{{ url_for("get_dish_from_category", category_name=dish.category_info.slug, dish_id=dish.ID) }}">
+                        <h1>{{ dish.Dish_name }}</h1></a>
+                    <p class="price">{{ dish.Price }}</p>
+                    <a href="{{ url_for("get_category", category_name=dish.category_info.slug) }}">
+                        <p>{{ dish.category_info.name }}</p></a>
+                    <p>{{ dish.Description }}</p>
+                    <p>
+                    <form method="POST" action="/cart/add">
+                    <input type="number" name="price" value={{ dish.Price }} hidden>
+                    <input type="number" name="dish_id" value={{ dish.ID }} hidden>
+                    <input type="number" name="protein" value={{ dish.Protein }} hidden>
+                    <input type="number" name="ccal" value={{ dish.Ccal }} hidden>
+                    <input type="number" name="fat" value={{ dish.Fat }} hidden>
+                    <input type="number" name="carbs" value={{ dish.Carbs }} hidden>
+                    <input type="number" name="quantity" value="1" hidden>
+                    <button type="submit">Додати в кошик</button>
+
+                </form>
+                    </p>
+                </div>
             </div>
-        </div>
-    {% endfor %}
+        {% endfor %}
     </div>
 
 
