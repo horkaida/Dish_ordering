@@ -10,7 +10,7 @@ def main_page():
     return render_template('main.html', user=session)
 
 
-@app.route('/cart', methods=['GET', 'DELETE'])
+@app.route('/cart', methods=['GET', 'POST'])
 def get_cart():
     if session.get('ID'):
         if request.method == 'GET':
@@ -19,7 +19,12 @@ def get_cart():
                 order = next((x for x in orders if x['Status'] == 0), None)
                 if order:
                     dishes = db.query_db(
-                        f"Select * from Orders join Ordered_dishes on Orders.ID = Ordered_dishes.Order_id join Dishes on Dishes.ID=Ordered_dishes.Dish JOIN Categories on Categories.id=Dishes.Category where Ordered_dishes.Order_id == {order['ID']} AND Orders.Status==0")
+                        f"Select Ordered_dishes.ID, Dishes.Price, Dishes.Ccal, Dishes.Fat, Dishes.Protein,"
+                        f"Dishes.Carbs, Dishes.Dish_name, Ordered_dishes.Quantity from Orders"
+                        f" join Ordered_dishes on Orders.ID = Ordered_dishes.Order_id"
+                        f" join Dishes on Dishes.ID=Ordered_dishes.Dish "
+                        f"JOIN Categories on Categories.id=Dishes.Category "
+                        f"where Ordered_dishes.Order_id == {order['ID']} AND Orders.Status==0")
                 else:
                     dishes=[]
                 order_info={'price':0, 'ccal':0, 'protein':0, 'fat':0, 'carb':0, 'order_id':order['ID']}
@@ -34,11 +39,11 @@ def get_cart():
         if request.method=='POST':
             with SQLiteDB('dish.db') as db:
                 data = request.form.to_dict()
-                order = db.select_from_db('Orders', ['ID'], {'User': session['ID']}, one=True)
-                dish = db.query_db(f"Select * from Orders join Ordered_dishes on Orders.ID = Ordered_dishes.Order_id join Dishes on Dishes.ID=Ordered_dishes.Dish JOIN Categories on Categories.id=Dishes.Category where Ordered_dishes.Order_id == {order['ID']} AND Orders.Status==0")
-            db.delete_from_db('Ordered_dishes', {})
+                print(data)
+                db.delete_from_db('Ordered_dishes', {'ID':data['ID']})
+                return app.redirect('/cart')
 
-    return '.'
+
 
 
 @app.route('/cart/order', methods=['POST'])

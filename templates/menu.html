@@ -20,7 +20,8 @@
                     <input type="number" name="ccal" value={{ dish.Ccal }} hidden>
                     <input type="number" name="fat" value={{ dish.Fat }} hidden>
                     <input type="number" name="carbs" value={{ dish.Carbs }} hidden>
-                    <input type="number" name="quantity" value="1" hidden>
+                    <label for="">Кількість</label>
+                    <input type="number" min="1" max="6" name="quantity" value="1">
                     <button type="submit">Додати в кошик</button>
 
                 </form>

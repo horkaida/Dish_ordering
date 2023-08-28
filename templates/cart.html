@@ -25,7 +25,8 @@
                 <td>{{ dish.Carbs }}</td>
                 <td>{{ dish.Fat }}</td>
                 <td>
-                    <form action="">
+                    <form method="POST">
+                        <input type="number" name="ID" value="{{ dish.ID }}" hidden>
                         <button type="submit">Видалити</button>
                     </form>
                 </td>
