@@ -17,16 +17,25 @@
 
         {% for dish in dishes %}
             <tr>
-                <td><a href={{ url_for("get_dish_from_category", dish_id=dish.ID, category_name=dish.slug) }}> {{ dish.Dish_name }}</a></td>
-                <td>{{ dish.Price }}</td>
-                <td>{{ dish.Quantity }}</td>
-                <td>{{ dish.Ccal }}</td>
-                <td>{{ dish.Protein }}</td>
-                <td>{{ dish.Carbs }}</td>
-                <td>{{ dish.Fat }}</td>
+                <td>
+                    <a href={{ url_for("get_dish_from_category", dish_id=dish.ID, category_name=dish.slug) }}> {{ dish.Dish_name }}</a>
+                </td>
+                <td>{{ dish.Price * dish.Quantity }}</td>
                 <td>
                     <form method="POST">
-                        <input type="number" name="ID" value="{{ dish.ID }}" hidden>
+                        <input type="number" min="1" max="6" name="quantity" value="{{ dish.Quantity }}">
+                        <input type="number" name="id" value="{{ dish.ID }}"hidden>
+                        <button type="submit">Змінити</button>
+                    </form>
+
+                </td>
+                <td>{{ dish.Ccal * dish.Quantity }}</td>
+                <td>{{ dish.Protein * dish.Quantity }}
+                </td>
+                <td>{{ dish.Carbs * dish.Quantity }}</td>
+                <td>{{ dish.Fat * dish.Quantity }}</td>
+                <td>
+                    <form method="POST" action="/cart/remove/{{ dish.ID }}">
                         <button type="submit">Видалити</button>
                     </form>
                 </td>

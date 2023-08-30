@@ -15,7 +15,8 @@ def get_cart():
     if session.get('ID'):
         if request.method == 'GET':
             with SQLiteDB('dish.db') as db:
-                orders = db.select_from_db('Orders', ['*'], {'User': session['ID']}) #TODO Implement with AND using ORM
+                orders = db.select_from_db('Orders', ['*'],
+                                           {'User': session['ID']})  # TODO Implement with AND using ORM
                 order = next((x for x in orders if x['Status'] == 0), None)
                 if order:
                     dishes = db.query_db(
@@ -25,25 +26,30 @@ def get_cart():
                         f" join Dishes on Dishes.ID=Ordered_dishes.Dish "
                         f"JOIN Categories on Categories.id=Dishes.Category "
                         f"where Ordered_dishes.Order_id == {order['ID']} AND Orders.Status==0")
+
+                    order_info = {'price': 0, 'ccal': 0, 'protein': 0, 'fat': 0, 'carb': 0, 'order_id': order['ID']}
+                    for dish in dishes:
+                        order_info['price'] += dish['Price'] * dish['Quantity']
+                        order_info['ccal'] += dish['Ccal'] * dish['Quantity']
+                        order_info['protein'] += dish['Protein'] * dish['Quantity']
+                        order_info['fat'] += dish['Fat'] * dish['Quantity']
+                        order_info['carb'] += dish['Carbs'] * dish['Quantity']
                 else:
-                    dishes=[]
-                order_info={'price':0, 'ccal':0, 'protein':0, 'fat':0, 'carb':0, 'order_id':order['ID']}
-                for dish in dishes:
-                    order_info['price'] += dish['Price'] * dish['Quantity']
-                    order_info['ccal'] += dish['Ccal'] * dish['Quantity']
-                    order_info['protein'] += dish['Protein'] * dish['Quantity']
-                    order_info['fat'] += dish['Fat'] * dish['Quantity']
-                    order_info['carb'] += dish['Carbs'] * dish['Quantity']
-                print(dishes)
+                    dishes = []
                 return render_template('cart.html', dishes=dishes, user=session, order_info=order_info)
-        if request.method=='POST':
+        if request.method == 'POST':
             with SQLiteDB('dish.db') as db:
                 data = request.form.to_dict()
-                print(data)
-                db.delete_from_db('Ordered_dishes', {'ID':data['ID']})
+                db.update_db('Ordered_dishes', {'Quantity': data['quantity']}, {'ID': data['id']})
                 return app.redirect('/cart')
 
 
+@app.route('/cart/remove/<ordered_dish_id>', methods=['POST'])  # TODO HTML form does not support DELETE method
+def remove_from_cart(ordered_dish_id):
+    if session.get('ID'):
+        with SQLiteDB('dish.db') as db:
+            db.delete_from_db('Ordered_dishes', {'ID': ordered_dish_id})
+            return app.redirect('/cart')
 
 
 @app.route('/cart/order', methods=['POST'])
@@ -54,7 +60,7 @@ def create_order():
             data['Status'] = 1
             order_id = data['ID']
             del data['ID']
-            db.update_db('Orders', data, {'ID':order_id})
+            db.update_db('Orders', data, {'ID': order_id})
 
     return render_template('thankYouPage.html')
 
@@ -67,19 +73,19 @@ def cart_add():
             orders = db.select_from_db('Orders', ['*'], {'User': session['ID']})
             order = next((x for x in orders if x['Status'] == 0), None)
             if order:
-                print('WE ARE HERE')
                 db.insert_into_db('Ordered_dishes',
                                   {'Dish': data['dish_id'], 'Quantity': data['quantity'], 'Order_id': order['ID']})
             else:
                 address = db.select_from_db('Addresses', ['ID'], {'User': session['ID']}, one=True)
                 db.insert_into_db('Orders', {'User': session['ID'], 'Address': address['ID'], 'Price': data['price'],
-                                             'Protein': data['protein'], 'Fat': data['fat'], 'Carb': data['carbs'], 'Ccal': data['ccal'], 'Created_at':1})
+                                             'Protein': data['protein'], 'Fat': data['fat'], 'Carb': data['carbs'],
+                                             'Ccal': data['ccal'], 'Created_at': 1})
                 orders = db.select_from_db('Orders', ['*'], {'User': session['ID']})
                 order = next(x for x in orders if x['Status'] == 0)
                 db.insert_into_db('Ordered_dishes',
                                   {'Dish': data['dish_id'], 'Quantity': data['quantity'], 'Order_id': order['ID']})
 
-            return app.redirect('/menu')
+        return app.redirect('/menu')
 
 
 @app.route('/user', methods=['GET', 'POST', 'DELETE  '])
@@ -239,16 +245,48 @@ def get_all_dishes():
         return app.redirect('/')
 
 
-@app.route('/admin/dishes/<dish_id>', methods=['GET', 'PUT', 'DELETE'])
+@app.route('/admin/dishes/create', methods=['GET', 'POST'])
+def admin_dish_create():
+    if session.get('ID') and session['Type'] == int(1):
+        if request.method == 'GET':
+            with SQLiteDB('dish.db') as db:
+                dish = {'Dish_name':'', 'Price':'', 'Description':'', 'Available':'', 'Category':1, 'Photo':'',
+                        'Ccal':'', 'Protein':'', 'Fat':'', 'Carbs':'', 'Average_rate':''}
+                categories = db.select_from_db('Categories', ['*'])
+                return render_template("admin/dish.html", dish=dish, categories=categories, user=session)
+        if request.method == 'POST':
+            with SQLiteDB('dish.db') as db:
+                data = request.form.to_dict()
+                db.insert_into_db('Dishes', data)
+                return app.redirect('/admin/dishes')
+    else:
+        return app.redirect('/')
+
+
+@app.route('/admin/dishes/<dish_id>', methods=['GET', 'POST'])
 def get_dish_admin(dish_id):
     if session.get('ID') and session['Type'] == int(1):
-        with SQLiteDB('dish.db') as db:
-            if request.method == 'GET':
+        if request.method == 'GET':
+            with SQLiteDB('dish.db') as db:
                 dish = db.select_from_db('Dishes', ['*'], {'id': dish_id}, one=True)
                 categories = db.select_from_db('Categories', ['*'])
                 return render_template("admin/dish.html", dish=dish, categories=categories, user=session)
+        if request.method == 'POST':
+            with SQLiteDB('dish.db') as db:
+                data = request.form.to_dict()
+                db.update_db('Dishes', data, {'ID': data['ID']})
+                return app.redirect('/admin/dishes')
     else:
         return app.redirect('/')
+
+
+@app.route('/admin/dishes/<dish_id>/remove', methods=['POST'])
+def admin_dish_delete(dish_id):
+    if session.get('ID') and session['Type'] == int(1):
+        if request.method == 'POST':
+            with SQLiteDB('dish.db') as db:
+                db.delete_from_db('Dishes', {'ID': dish_id})
+                return app.redirect('/admin/dishes')
 
 
 @app.route('/admin/orders', methods=['GET'])
