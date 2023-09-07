@@ -16,13 +16,13 @@
 
         {% for address in addresses %}
             <tr>
-                <td>{{ address.City }}</td>
-                <td>{{ address.Street }}</td>
-                <td>{{ address.Building }}</td>
-                <td>{{ address.Apt }}</td>
-                <td>{{ address.Entrance }}</td>
-                <td>{{ address.Floor }}</td>
-                <td><a href="{{ url_for("get_user_address_by_id", id=address.ID) }}">Змінити</a></td>
+                <td>{{ address.city }}</td>
+                <td>{{ address.street }}</td>
+                <td>{{ address.building }}</td>
+                <td>{{ address.apt }}</td>
+                <td>{{ address.entrance }}</td>
+                <td>{{ address.floor }}</td>
+                <td><a href="{{ url_for("get_user_address_by_id", id=address.id) }}">Змінити</a></td>
 
             </tr>
     {% endfor %}

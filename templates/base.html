@@ -19,8 +19,8 @@
     <a href="/user/orders">Замовлення</a>
     <div class="user-part">
         {% if user %}
-       <a href="/user">Привіт, {{ user.First_name }}!</a>
-    {% if user.ID == 1 %}
+       <a href="/user">Привіт, {{ user.first_name }}!</a>
+    {% if user.type == 1 %}
         <a href="/admin/">Адмінпанель</a>
     {% endif  %}
         <div>

@@ -14,11 +14,11 @@
 
         {% for order in orders %}
             <tr>
-                <td><a href={{ url_for("get_order_from_history", id=order.ID) }}> {{ order.ID }}</a></td>
-                <td>{{ order.Price }}</td>
-                <td>{{ order.Address }}</td>
-                <td>{{ order.Created_at }}</td>
-                <td>{{ order.Rate }}</td>
+                <td><a href={{ url_for("get_order_from_history", id=order.id) }}> {{ order.id }}</a></td>
+                <td>{{ order.price }}</td>
+                <td>{{ order.address }}</td>
+                <td>{{ order.created_at }}</td>
+                <td>{{ order.rate }}</td>
 
 
             </tr>

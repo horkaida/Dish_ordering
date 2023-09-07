@@ -18,24 +18,24 @@
         {% for dish in dishes %}
             <tr>
                 <td>
-                    <a href={{ url_for("get_dish_from_category", dish_id=dish.ID, category_name=dish.slug) }}> {{ dish.Dish_name }}</a>
+                    <a href={{ url_for("get_dish_from_category", dish_id=dish.id, category_name=dish.slug) }}> {{ dish.dish_name }}</a>
                 </td>
-                <td>{{ dish.Price * dish.Quantity }}</td>
+                <td>{{ dish.price * dish.quantity }}</td>
                 <td>
                     <form method="POST">
-                        <input type="number" min="1" max="6" name="quantity" value="{{ dish.Quantity }}">
-                        <input type="number" name="id" value="{{ dish.ID }}"hidden>
+                        <input type="number" min="1" max="6" name="quantity" value="{{ dish.quantity }}">
+                        <input type="number" name="id" value="{{ dish.id }}"hidden>
                         <button type="submit">Змінити</button>
                     </form>
 
                 </td>
-                <td>{{ dish.Ccal * dish.Quantity }}</td>
-                <td>{{ dish.Protein * dish.Quantity }}
+                <td>{{ dish.ccal * dish.quantity }}</td>
+                <td>{{ dish.protein * dish.quantity }}
                 </td>
-                <td>{{ dish.Carbs * dish.Quantity }}</td>
-                <td>{{ dish.Fat * dish.Quantity }}</td>
+                <td>{{ dish.carbs * dish.quantity }}</td>
+                <td>{{ dish.fat * dish.quantity }}</td>
                 <td>
-                    <form method="POST" action="/cart/remove/{{ dish.ID }}">
+                    <form method="POST" action="/cart/remove/{{ dish.id }}">
                         <button type="submit">Видалити</button>
                     </form>
                 </td>
@@ -54,14 +54,15 @@
 
     </table>
     <form action="/cart/order" method="POST">
-        <input hidden type="number" name="Price" value={{ order_info.price }}>
-        <input hidden type="number" name="Ccal" value={{ order_info.ccal }}>
-        <input hidden type="number" name="Protein" value={{ order_info.protein }}>
-        <input hidden type="number" name="Carb" value={{ order_info.carb }}>
-        <input hidden type="number" name="Fat" value={{ order_info.fat }}>
-        <input hidden type="number" name="ID" value={{ order_info.order_id }}>
-
+        <input hidden type="number" name="price" value={{ order_info.price }}>
+        <input hidden type="number" name="ccal" value={{ order_info.ccal }}>
+        <input hidden type="number" name="protein" value={{ order_info.protein }}>
+        <input hidden type="number" name="carbs" value={{ order_info.carb }}>
+        <input hidden type="number" name="fat" value={{ order_info.fat }}>
+        <input hidden type="number" name="id" value={{ order_info.order_id }}>
+        {% if  order_info.order_id %}
         <button class="button" type="submit">Оформити замовлення</button>
+        {% endif %}
     </form>
 
 
