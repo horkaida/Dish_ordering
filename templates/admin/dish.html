@@ -3,46 +3,63 @@
 {% block content %}
     <form method="POST">
         <div class="form-container">
+        {% if dish.id %}
+            <input type="number" name="id" value="{{ dish.id }}" hidden>
+        {% endif %}
+
             <label for="img"><b>Зображення</b></label>
-                <input type="text" name="Photo" value="{{ dish.Photo }}" id="img" >
+            <input type="text" name="photo" value="{{ dish.Photo }}" id="img">
 
             <label for="name"><b>Назва</b></label>
-                <input type="text" name="Dish_name" value="{{ dish.Dish_name }}" id="name" required>
+            <input type="text" name="dish_name" value="{{ dish.dish_name }}" id="name" required>
 
             <label for="price"><b>Ціна</b></label>
-                <input type="text" name="Price" value="{{ dish.Price }}" id="price" required>
+            <input type="text" name="price" value="{{ dish.price }}" id="price" required>
 
             <label for="description"><b>Опис</b></label>
-                <input type="text" name="Description" value="{{ dish.Description }}" id="description" required>
+            <input type="text" name="description" value="{{ dish.Description }}" id="description" required>
 
             <label for="available"><b>Наявність</b></label>
-                <input type="text" name="Available" value="{{ dish.Available }}" id="available" required>
+            <input type="text" name="available" value="{{ dish.Available }}" id="available" required>
 
             <label for="category"><b>Категорія</b></label>
-                <select name="Category" id="category" required>
-                    {% for category in categories %}
-                        {% if dish.Category == category.id %}
+            <select name="category" id="category" required>
+                {% for category in categories %}
+                    {% if dish.category == category.id %}
                         <option value="{{ category.id }}" selected> {{ category.name }}</option>
-                        {% else %}
+                    {% else %}
                         <option value="{{ category.id }}"> {{ category.name }}</option>
-                        {% endif %}
-                    {% endfor %}
-                </select>
+                    {% endif %}
+                {% endfor %}
+            </select>
 
             <label for="ccal"><b>Калорії</b></label>
-                <input type="text" name="Ccal" value="{{ dish.Ccal }}" id="ccal" required>
+            <input type="text" name="ccal" value="{{ dish.ccal }}" id="ccal" required>
 
             <label for="protein"><b>Білки</b></label>
-                <input type="text" name="Protein" value="{{ dish.Protein }}" id="protein" required>
+            <input type="text" name="protein" value="{{ dish.protein }}" id="protein" required>
 
             <label for="fat"><b>Жири</b></label>
-                <input type="text" name="Fat" value="{{ dish.Fat }}" id="fat" required>
+            <input type="text" name="fat" value="{{ dish.fat }}" id="fat" required>
 
             <label for="carbs"><b>Вyглеводи</b></label>
-                <input type="text" name="Carbs" value="{{ dish.Carbs }}" id="carbs" required>
+            <input type="text" name="carbs" value="{{ dish.carbs }}" id="carbs" required>
 
-            <button type="submit" class="registerbtn">Зберегти</button>
 
-    </div>
+
+            {% if dish.id %}
+                <button type="submit" class="registerbtn">Зберегти</button>
+            {% else %}
+                <button type="submit" class="registerbtn">Створити</button>
+            {% endif %}
+        </div>
     </form>
+
+    {% if dish.id %}
+        <form action="/admin/dishes/{{ dish.id }}/remove" method="POST">
+            <input type="number" name="id" value={{ dish.id }} hidden>
+            <button style="background-color: red" type="submit" class="registerbtn">Видалити</button>
+        </form>
+    {% endif %}
+
 {% endblock %}

@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>Замовлення</h2>
+
+    <table>
+        <tr>
+            <th>Назва</th>
+            <th>Ціна</th>
+            <th>Кількість</th>
+            <th>Калорії</th>
+            <th>Білки</th>
+            <th>Вуглеводи</th>
+            <th>Жири</th>
+            <th></th>
+        </tr>
+
+        {% for dish in dishes %}
+            <tr>
+                <td>
+                    <a href={{ url_for("get_dish_from_category", dish_id=dish.id, category_name=dish.slug) }}> {{ dish.dish_name }}</a>
+                </td>
+                <td>{{ dish.price * dish.quantity }}</td>
+                <td>
+                    <form method="POST">
+                        <input type="number" min="1" max="6" name="quantity" value="{{ dish.quantity }}">
+                        <input type="number" name="id" value="{{ dish.id }}"hidden>
+                        <button type="submit">Змінити</button>
+                    </form>
+
+                </td>
+                <td>{{ dish.ccal * dish.quantity }}</td>
+                <td>{{ dish.protein * dish.quantity }}
+                </td>
+                <td>{{ dish.carbs * dish.quantity }}</td>
+                <td>{{ dish.fat * dish.quantity }}</td>
+                <td>
+                    <form method="POST" action="/cart/remove/{{ dish.id }}">
+                        <button type="submit">Видалити</button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+        <tr>
+            <td>Загалом:</td>
+            <td>{{ order_info.price }}</td>
+            <td></td>
+            <td>{{ order_info.ccal }}</td>
+            <td>{{ order_info.protein }}</td>
+            <td>{{ order_info.carb }}</td>
+            <td>{{ order_info.fat }}</td>
+            <td></td>
+        </tr>
+
+    </table>
+    <form action="/cart/order" method="POST">
+        <input hidden type="number" name="price" value={{ order_info.price }}>
+        <input hidden type="number" name="ccal" value={{ order_info.ccal }}>
+        <input hidden type="number" name="protein" value={{ order_info.protein }}>
+        <input hidden type="number" name="carbs" value={{ order_info.carb }}>
+        <input hidden type="number" name="fat" value={{ order_info.fat }}>
+        <input hidden type="number" name="id" value={{ order_info.order_id }}>
+        {% if  order_info.order_id %}
+        <button class="button" type="submit">Оформити замовлення</button>
+        {% endif %}
+    </form>
+
+
+{% endblock %}
