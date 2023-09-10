@@ -1,5 +1,9 @@
 from flask import Flask, request, session, render_template
+from sqlalchemy import join
 from database_old import SQLiteDB
+import database
+import models
+import json
 
 app = Flask(__name__)
 app.secret_key = '_5#y2L"F4Q8zfdvdhbfvjdvdf]/'
@@ -43,6 +47,7 @@ def get_cart():
                 data = request.form.to_dict()
                 db.update_db('Ordered_dishes', {'quantity': data['quantity']}, {'id': data['id']})
                 return app.redirect('/cart')
+    return '.'
 
 
 @app.route('/cart/remove/<ordered_dish_id>', methods=['POST'])  # TODO HTML form does not support DELETE method
@@ -183,15 +188,16 @@ def get_user_address_by_id(id):
 
 @app.route('/menu', methods=['GET', 'POST'])
 def get_menu():
-    with SQLiteDB('dish.db') as db:
-        if request.method == 'POST':
-            data = request.form.to_dict()
-            db.insert_into_db('Dishes', data)
-        dishes = db.select_from_db('Dishes', ['*'])
-        categories = db.select_from_db('Categories', ['*'])
-        for dish in dishes:
-            dish['category_info'] = next(x for x in categories if x['id'] == dish['category'])
-        return render_template("menu.html", dishes=dishes, user=session)
+    database.init_db()
+        # if request.method == 'POST':
+        #     data = request.form.to_dict()
+        #     db.insert_into_db('Dishes', data)
+    dishes = database.db_session.query(models.Dish).join(models.Category, models.Category.id == models.Dish.category)
+    print(dishes)
+        # # categories = db.select_from_db('Categories', ['*'])
+        # # for dish in dishes:
+        # #     dish['category_info'] = next(x for x in categories if x['id'] == dish['category'])
+    return render_template("menu.html", dishes=dishes, user=session)
 
 
 @app.route('/menu/<category_name>', methods=['GET'])
