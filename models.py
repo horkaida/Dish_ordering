@@ -1,5 +1,7 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, Float
+
 from database import Base
+from sqlalchemy.orm import relationship
 
 
 class User_type(Base):
@@ -19,9 +21,10 @@ class User(Base):
     email = Column(String(50), unique=True)
     password = Column(String(50))
     tg = Column(Integer)
-    type = Column(Integer, ForeignKey('User_type.id'))
+    type = Column(Integer, ForeignKey('User_types.id'))
     first_name = Column(String(50))
     second_name = Column(String(50))
+    address = relationship('Address', back_populates='user_info')
 
     def __init__(self, phone=None, email=None, password=None, tg=None, first_name=None, second_name=None):
         self.phone = phone
@@ -44,7 +47,8 @@ class Address(Base):
     building = Column(String(120))
     apt = Column(Integer)
     floor = Column(Integer)
-    user = Column(Integer, ForeignKey('User.id'))
+    user = Column(Integer, ForeignKey('Users.id'))
+    user_info = relationship('User', back_populates='address')
 
     def __init__(self, city=None, street=None, building=None, apt=None, floor=None, user=None):
         self.city = city
@@ -64,6 +68,7 @@ class Category(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(120))
     slug = Column(String(120))
+    dishes = relationship("Dish", back_populates="category_info")
 
     def __init__(self, name=None, slug=None):
         self.name = name
@@ -81,13 +86,15 @@ class Dish(Base):
     price = Column(Integer)
     description = Column(String(120))
     available = Column(Integer)
-    category = Column(Integer, ForeignKey('Category.id'))
+    category = Column(Integer, ForeignKey('Categories.id'))
     photo = Column(String(120))
     ccal = Column(Integer)
     protein = Column(Integer)
     fat = Column(Integer)
     carbs = Column(Integer)
     average_rate = Column(Integer)
+    category_info = relationship('Category', back_populates='dishes')
+    for_ordered_dishes = relationship('Ordered_dish', back_populates='dish_info')
 
     def __init__(self, dish_name=None, price=None, description=None, available=None, category=None, photo=None, ccal=None, protein=None, fat=None, carbs=None, average_rate=None, slug=None):
         self.dish_name = dish_name
@@ -110,9 +117,11 @@ class Dish(Base):
 class Ordered_dish(Base):
     __tablename__ = 'Ordered_dishes'
     id = Column(Integer, primary_key=True)
-    dish = Column(Integer, ForeignKey('Dish.id'))
-    order_id = Column(Integer, ForeignKey('Order.id'))
+    dish = Column(Integer, ForeignKey('Dishes.id'))
+    order_id = Column(Integer, ForeignKey('Orders.id'))
     quantity = Column(Integer)
+    order_info = relationship('Order', back_populates='ordered_dishes')
+    dish_info = relationship('Dish', back_populates='for_ordered_dishes')
 
     def __init__(self, dish=None, order_id=None, quantity=None):
         self.dish = dish
@@ -127,8 +136,8 @@ class Ordered_dish(Base):
 class Order(Base):
     __tablename__ = 'Orders'
     id = Column(Integer, primary_key=True)
-    user = Column(Integer, ForeignKey('User.id'))
-    address = Column(Integer, ForeignKey('Address.id'))
+    user = Column(Integer, ForeignKey('Users.id'))
+    address = Column(Integer, ForeignKey('Addresses.id'))
     price = Column(Integer)
     protein = Column(Integer)
     fat = Column(Integer)
@@ -137,7 +146,8 @@ class Order(Base):
     comment = Column(String(350))
     created_at = Column(Integer)
     rate = Column(Integer)
-    status = Column(Integer, ForeignKey('Status.id'))
+    status = Column(Integer, ForeignKey('Statuses.id'))
+    ordered_dishes = relationship('Ordered_dish', back_populates='order_info')
 
     def __init__(self, user=None, address=None, price=None, protein=None, fat=None, carbs=None, ccal=None, comment=None, created_at=None, rate=None):
         self.user = user
@@ -150,10 +160,8 @@ class Order(Base):
         self.comment = comment
         self.created_at = created_at
         self.rate = rate
-
     def __str__(self):
         return f'<Order {self.id}>'
-
     def __repr__(self):
         return self.__str__()
 
@@ -170,11 +178,9 @@ class Status(Base):
 class Dish_rate(Base):
     __tablename__ = 'Dish_rates'
     id = Column(Integer, primary_key=True)
-    dish_id = Column(Integer, ForeignKey('Dish.id'))
+    dish_id = Column(Integer, ForeignKey('Dishes.id'))
     rate = Column(Float)
-
     def __str__(self):
         return f'<Dish_rate {self.id}>'
-
     def __repr__(self):
         return self.__str__()

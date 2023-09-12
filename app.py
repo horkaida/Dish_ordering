@@ -1,9 +1,7 @@
 from flask import Flask, request, session, render_template
-from sqlalchemy import join
 from database_old import SQLiteDB
 import database
 import models
-import json
 
 app = Flask(__name__)
 app.secret_key = '_5#y2L"F4Q8zfdvdhbfvjdvdf]/'
@@ -90,7 +88,6 @@ def cart_add():
                 order = next(x for x in orders if x['status'] == 0)
                 db.insert_into_db('Ordered_dishes',
                                   {'dish': data['dish_id'], 'quantity': data['quantity'], 'order_id': order['id']})
-
         return app.redirect('/menu')
 
 
@@ -105,10 +102,15 @@ def user():
 @app.route('/user/register', methods=['GET', 'POST'])
 def user_register():
     if request.method == 'POST':
-        with SQLiteDB('dish.db') as db:
-            data = request.form.to_dict()
-            db.insert_into_db('users', data)
-
+        data = request.form.to_dict()
+        user = models.User(email=data['email'],
+                           phone=data['phone'],
+                           password=data['password'],
+                           type=2,
+                           first_name=data['first_name'],
+                           second_name=data['second_name'])
+        database.db_session.add(user)
+        database.db_session.commit()
     return render_template('registration.html')
 
 
@@ -145,9 +147,8 @@ def user_reset_password():
 @app.route('/user/orders', methods=['GET'])
 def get_orders_history():
     if session.get('id'):
-        with SQLiteDB('dish.db') as db:
-            orders = db.select_from_db('Orders', ['*'], {'user': session['id']})
-            return render_template('orders.html', orders=orders, user=session)
+        orders = database.db_session.query(models.Order).where(models.Order.user == session['id'])
+        return render_template('orders.html', orders=orders, user=session)
     return app.redirect("/user/login", code=302)
 
 
@@ -186,44 +187,32 @@ def get_user_address_by_id(id):
     return app.redirect("/user/login", code=302)
 
 
-@app.route('/menu', methods=['GET', 'POST'])
+@app.route('/menu', methods=['GET'])
 def get_menu():
-    database.init_db()
-        # if request.method == 'POST':
-        #     data = request.form.to_dict()
-        #     db.insert_into_db('Dishes', data)
-    dishes = database.db_session.query(models.Dish).join(models.Category, models.Category.id == models.Dish.category)
-    print(dishes)
-        # # categories = db.select_from_db('Categories', ['*'])
-        # # for dish in dishes:
-        # #     dish['category_info'] = next(x for x in categories if x['id'] == dish['category'])
+    # database.init_db()
+    dishes = database.db_session.query(models.Dish).join(models.Category, models.Category.id == models.Dish.category).all()
     return render_template("menu.html", dishes=dishes, user=session)
 
 
 @app.route('/menu/<category_name>', methods=['GET'])
 def get_category(category_name):
-    with SQLiteDB('dish.db') as db:
-        category = db.select_from_db('Categories', ["*"], {'slug': category_name}, one=True)
-        dishes = db.select_from_db('Dishes', ['*'], {'category': category['id']})
-        for dish in dishes:
-            dish['category_info'] = category
-        return render_template('menu.html', dishes=dishes, user=session)
+    category = database.db_session.query(models.Category).where(models.Category.slug == category_name).one()
+    dishes = database.db_session.query(models.Dish).join(models.Category, models.Category.id == models.Dish.category).filter(models.Dish.category == category.id).all()
+    return render_template('menu.html', dishes=dishes, user=session)
 
 
 @app.route('/menu/<category_name>/<dish_id>', methods=['GET'])
 def get_dish_from_category(category_name, dish_id):
-    with SQLiteDB('dish.db') as db:
-        dish= db.select_from_db('Dishes', ['*'], {'id': dish_id}, one=True)
-        dish['category_info'] = db.select_from_db('Categories', ["*"], {'slug': category_name}, one=True)
-        return render_template('dish.html', dish=dish, user=session)
+    dish = database.db_session.query(models.Dish).where(models.Dish.id == dish_id).join(models.Category, models.Category.id == models.Dish.category).one()
+    return render_template('dish.html', dish=dish, user=session)
 
 
 @app.route('/menu/<category_name>/<dish_id>/review', methods=['POST'])
 def dish_review(category_name, dish_id):
-    with SQLiteDB('dish.db') as db:
         data = request.form.to_dict()
-        data['Dish_id'] = dish_id
-        db.insert_into_db('Dish_rates', data)
+        dish_rate = models.Dish_rate(dish_id = dish_id, rate = data['rate'])
+        database.db_session.add(dish_rate)
+        database.db_session.commit()
         return app.redirect(f'/menu/{category_name}/{dish_id}', code=302)
 
 
