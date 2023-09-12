@@ -106,11 +106,11 @@ def user_register():
         user = models.User(email=data['email'],
                            phone=data['phone'],
                            password=data['password'],
-                           type=2,
                            first_name=data['first_name'],
                            second_name=data['second_name'])
         database.db_session.add(user)
         database.db_session.commit()
+        return app.redirect('/login', code=302)
     return render_template('registration.html')
 
 
@@ -120,15 +120,16 @@ def user_login():
         return app.redirect("/user", code=302)
 
     if request.method == 'POST':
-        with SQLiteDB('dish.db') as db:
-            data = request.form.to_dict()
-            user = db.select_from_db("users", ['*'], {'email': data['email']}, one=True)
-            if user['password'] == data['password']:
-                for key, value in user.items():
-                    session[key] = value
-                return app.redirect("/user", code=302)
-            else:
-                return render_template('login.html', error='Incorrect credentials')
+        data = request.form.to_dict()
+        user = database.db_session.query(models.User).where(models.User.email == data['email']).one()
+        if user.password == data['password']:
+            session['id'] = user.id
+            session['first_name'] = user.first_name
+            session['second_name'] = user.second_name
+            session['type'] = user.type
+            return app.redirect("/user", code=302)
+        else:
+            return render_template('login.html', error='Incorrect credentials')
 
     return render_template('login.html')
 
@@ -155,41 +156,31 @@ def get_orders_history():
 @app.route('/user/orders/<id>', methods=['GET'])
 def get_order_from_history(id):
     if session.get('id'):
-        with SQLiteDB('dish.db') as db:
-            orders = db.select_from_db('Orders', ['*'], {'user': session['id']})
-            order = None
-            for item in orders:
-                if item["id"] == int(id):
-                    order = item
-            return render_template('order.html', order=order, user=session)
+        order = database.db_session.query(models.Order).where((models.User.id == session['id'])
+                                                              & (models.Order.id == id)).one_or_none()
+        return render_template('order.html', order=order, user=session)
     return app.redirect("/user/login", code=302)
 
 
 @app.route('/user/address', methods=['GET', 'POST'])
 def get_address():
     if session.get('id'):
-        with SQLiteDB('dish.db') as db:
-            addresses = db.select_from_db('Addresses', ['*'], {'user': session['id']})
-            return render_template('addresses.html', addresses=addresses, user=session)
+        addresses = database.db_session.query(models.Address).where(models.Address.user == session['id']).all()
+        return render_template('addresses.html', addresses=addresses, user=session)
     return app.redirect("/user/login", code=302)
 
 
 @app.route('/user/address/<id>', methods=['GET', 'PUT', 'POST'])
 def get_user_address_by_id(id):
     if session.get('id'):
-        with SQLiteDB('dish.db') as db:
-            addresses = db.select_from_db('Addresses', ['*'], {'user': session['id']})
-            address = None
-            for item in addresses:
-                if item["id"] == int(id):
-                    address = item
-            return render_template('address.html', address=address, user=session)
+        address = database.db_session.query(models.Address).where((models.Address.user == session['id'])
+                                                                  & (models.Address.id == id)).one_or_none()
+        return render_template('address.html', address=address, user=session)
     return app.redirect("/user/login", code=302)
 
 
 @app.route('/menu', methods=['GET'])
 def get_menu():
-    # database.init_db()
     dishes = database.db_session.query(models.Dish).join(models.Category, models.Category.id == models.Dish.category).all()
     return render_template("menu.html", dishes=dishes, user=session)
 
@@ -227,16 +218,11 @@ def get_admin_page():
     return render_template('admin/admin.html', user=session)
 
 
-@app.route('/admin/dishes', methods=['GET', 'POST'])
+@app.route('/admin/dishes', methods=['GET'])
 def get_all_dishes():
     if session.get('id') and session['type'] == int(1):
-        with SQLiteDB('dish.db') as db:
-            if request.method == 'GET':
-                dishes = db.select_from_db('Dishes', ['*'])
-                categories = db.select_from_db('Categories', ['*'])
-                for dish in dishes:
-                    dish['category_info'] = next(x for x in categories if x['id'] == dish['category'])
-                return render_template('admin/dishes.html', dishes=dishes, user=session)
+        dishes = database.db_session.query(models.Dish).join(models.Category, models.Dish.category == models.Category.id).all()
+        return render_template('admin/dishes.html', dishes=dishes, user=session)
     else:
         return app.redirect('/')
 
@@ -245,16 +231,26 @@ def get_all_dishes():
 def admin_dish_create():
     if session.get('id') and session['type'] == int(1):
         if request.method == 'GET':
-            with SQLiteDB('dish.db') as db:
-                dish= {'dish_name':'', 'price':'', 'description':'', 'available':'', 'category':1, 'Photo':'',
-                        'ccal':'', 'protein':'', 'fat':'', 'carbs':'', 'average_rate':''}
-                categories = db.select_from_db('Categories', ['*'])
-                return render_template("admin/dish.html", dish=dish, categories=categories, user=session)
+            dish= {'dish_name':'', 'price':'', 'description':'', 'available':'', 'category':1, 'Photo':'',
+                    'ccal':'', 'protein':'', 'fat':'', 'carbs':'', 'average_rate':''}
+            categories = database.db_session.query(models.Category).all()
+            return render_template("admin/dish.html", dish=dish, categories=categories, user=session)
         if request.method == 'POST':
-            with SQLiteDB('dish.db') as db:
-                data = request.form.to_dict()
-                db.insert_into_db('Dishes', data)
-                return app.redirect('/admin/dishes')
+            data = request.form.to_dict()
+            dish = models.Dish(dish_name=data['dish_name'],
+                               price=data['price'],
+                               description=data['description'],
+                               available=data['available'],
+                               category=data['category'],
+                               photo=data['photo'],
+                               ccal=data['ccal'],
+                               protein=data['protein'],
+                               fat=data['fat'],
+                               carbs=data['carbs']
+                               )
+            database.db_session.add(dish)
+            database.db_session.commit()
+            return app.redirect('/admin/dishes')
     else:
         return app.redirect('/')
 
@@ -262,16 +258,24 @@ def admin_dish_create():
 @app.route('/admin/dishes/<dish_id>', methods=['GET', 'POST'])
 def get_dish_admin(dish_id):
     if session.get('id') and session['type'] == int(1):
+        dish = database.db_session.query(models.Dish).where(models.Dish.id == dish_id).one()
         if request.method == 'GET':
-            with SQLiteDB('dish.db') as db:
-                dish= db.select_from_db('Dishes', ['*'], {'id': dish_id}, one=True)
-                categories = db.select_from_db('Categories', ['*'])
-                return render_template("admin/dish.html", dish=dish, categories=categories, user=session)
+            categories = database.db_session.query(models.Category).all()
+            return render_template("admin/dish.html", dish=dish, categories=categories, user=session)
         if request.method == 'POST':
-            with SQLiteDB('dish.db') as db:
-                data = request.form.to_dict()
-                db.update_db('Dishes', data, {'id': data['id']})
-                return app.redirect('/admin/dishes')
+            data = request.form.to_dict()
+            dish.dish_name=data['dish_name']
+            dish.category=data['category']
+            dish.fat=data['fat']
+            dish.ccal=data['ccal']
+            dish.carbs=data['carbs']
+            dish.protein=data['protein']
+            dish.price=data['price']
+            dish.description=data['description']
+            dish.available=data['available']
+            dish.photo=data['photo']
+            database.db_session.commit()
+            return app.redirect('/admin/dishes')
     else:
         return app.redirect('/')
 
@@ -280,9 +284,11 @@ def get_dish_admin(dish_id):
 def admin_dish_delete(dish_id):
     if session.get('id') and session['type'] == int(1):
         if request.method == 'POST':
-            with SQLiteDB('dish.db') as db:
-                db.delete_from_db('Dishes', {'id': dish_id})
-                return app.redirect('/admin/dishes')
+            database.db_session.query(models.Dish).where(models.Dish.id == dish_id).delete()
+            database.db_session.commit()
+            return app.redirect('/admin/dishes')
+    else:
+        return app.redirect('/', code=302)
 
 
 @app.route('/admin/orders', methods=['GET'])

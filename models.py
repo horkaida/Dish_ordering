@@ -20,17 +20,15 @@ class User(Base):
     phone = Column(Integer, unique=True)
     email = Column(String(50), unique=True)
     password = Column(String(50))
-    tg = Column(Integer)
     type = Column(Integer, ForeignKey('User_types.id'))
     first_name = Column(String(50))
     second_name = Column(String(50))
     address = relationship('Address', back_populates='user_info')
 
-    def __init__(self, phone=None, email=None, password=None, tg=None, first_name=None, second_name=None):
+    def __init__(self, phone=None, email=None, password=None, first_name=None, second_name=None):
         self.phone = phone
         self.email = email
         self.password = password
-        self.tg = tg
         self.first_name = first_name
         self.second_name = second_name
     def __str__(self):
@@ -96,7 +94,7 @@ class Dish(Base):
     category_info = relationship('Category', back_populates='dishes')
     for_ordered_dishes = relationship('Ordered_dish', back_populates='dish_info')
 
-    def __init__(self, dish_name=None, price=None, description=None, available=None, category=None, photo=None, ccal=None, protein=None, fat=None, carbs=None, average_rate=None, slug=None):
+    def __init__(self, dish_name=None, price=None, description=None, available=None, category=None, photo=None, ccal=None, protein=None, fat=None, carbs=None):
         self.dish_name = dish_name
         self.price = price
         self.description = description
@@ -107,7 +105,6 @@ class Dish(Base):
         self.protein = protein
         self.fat = fat
         self.carbs = carbs
-        self.average_rate = average_rate
     def __str__(self):
         return f'<Dish {self.id}>'
     def __repr__(self):
