@@ -15,27 +15,27 @@
             <th></th>
         </tr>
 
-        {% for dish in dishes %}
+        {% for ordered_dish in dishes %}
             <tr>
                 <td>
-                    <a href={{ url_for("get_dish_from_category", dish_id=dish.id, category_name=dish.slug) }}> {{ dish.dish_name }}</a>
+                    <a href={{ url_for("get_dish_from_category", dish_id=ordered_dish.dish_info.id, category_name=ordered_dish.dish_info.category_info.slug) }}> {{ ordered_dish.dish_info.dish_name }}</a>
                 </td>
-                <td>{{ dish.price * dish.quantity }}</td>
+                <td>{{ ordered_dish.dish_info.price * ordered_dish.quantity }}</td>
                 <td>
                     <form method="POST">
-                        <input type="number" min="1" max="6" name="quantity" value="{{ dish.quantity }}">
-                        <input type="number" name="id" value="{{ dish.id }}"hidden>
+                        <input type="number" min="1" max="6" name="quantity" value="{{ ordered_dish.quantity }}">
+                        <input type="number" name="id" value="{{ ordered_dish.id }}"hidden>
                         <button type="submit">Змінити</button>
                     </form>
 
                 </td>
-                <td>{{ dish.ccal * dish.quantity }}</td>
-                <td>{{ dish.protein * dish.quantity }}
+                <td>{{ ordered_dish.dish_info.ccal * ordered_dish.quantity }}</td>
+                <td>{{ ordered_dish.dish_info.protein * ordered_dish.quantity }}
                 </td>
-                <td>{{ dish.carbs * dish.quantity }}</td>
-                <td>{{ dish.fat * dish.quantity }}</td>
+                <td>{{ ordered_dish.dish_info.carbs * ordered_dish.quantity }}</td>
+                <td>{{ ordered_dish.dish_info.fat * ordered_dish.quantity }}</td>
                 <td>
-                    <form method="POST" action="/cart/remove/{{ dish.id }}">
+                    <form method="POST" action="/cart/remove/{{ ordered_dish.id }}">
                         <button type="submit">Видалити</button>
                     </form>
                 </td>

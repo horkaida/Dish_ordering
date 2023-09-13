@@ -45,16 +45,18 @@ class Address(Base):
     building = Column(String(120))
     apt = Column(Integer)
     floor = Column(Integer)
+    entrance = Column(Integer)
     user = Column(Integer, ForeignKey('Users.id'))
     user_info = relationship('User', back_populates='address')
 
-    def __init__(self, city=None, street=None, building=None, apt=None, floor=None, user=None):
+    def __init__(self, city=None, street=None, building=None, apt=None, floor=None, user=None, entrance=None):
         self.city = city
         self.street = street
         self.building = building
         self.apt = apt
         self.floor = floor
         self.user = user
+        self.entrance = entrance
     def __str__(self):
         return f'<Address {self.id}>'
     def __repr__(self):
@@ -146,7 +148,7 @@ class Order(Base):
     status = Column(Integer, ForeignKey('Statuses.id'))
     ordered_dishes = relationship('Ordered_dish', back_populates='order_info')
 
-    def __init__(self, user=None, address=None, price=None, protein=None, fat=None, carbs=None, ccal=None, comment=None, created_at=None, rate=None):
+    def __init__(self, user=None, address=None, price=None, protein=None, fat=None, carbs=None, ccal=None, comment=None, created_at=None, rate=None, status=None):
         self.user = user
         self.address = address
         self.price = price
@@ -157,6 +159,7 @@ class Order(Base):
         self.comment = comment
         self.created_at = created_at
         self.rate = rate
+        self.status = status
     def __str__(self):
         return f'<Order {self.id}>'
     def __repr__(self):
