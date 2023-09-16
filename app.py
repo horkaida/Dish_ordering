@@ -1,5 +1,4 @@
 from flask import Flask, request, session, render_template
-from database_old import SQLiteDB
 import database
 import models
 
@@ -190,12 +189,12 @@ def get_user_address_by_id(id):
                                                                   & (models.Address.id == id)).one_or_none()
         if request.method == 'POST':
             data = request.form.to_dict()
-            address.city=data['city']
-            address.street=data['street']
-            address.building=data['building']
-            address.entrance=data['entrance']
-            address.floor=data['floor']
-            address.apt=data['apt']
+            address.city = data['city']
+            address.street = data['street']
+            address.building = data['building']
+            address.entrance = data['entrance']
+            address.floor = data['floor']
+            address.apt = data['apt']
             database.db_session.commit()
         return render_template('address.html', address=address, user=session)
     return app.redirect("/user/login", code=302)
@@ -349,12 +348,12 @@ def get_all_categories():
 def admin_get_category(category_slug):
     if session.get('id') and session['type'] == int(1):
         category = database.db_session.query(models.Category).where(models.Category.slug == category_slug).one_or_none()
-        if request.method=='GET':
+        if request.method == 'GET':
             return render_template('admin/category.html', category=category, user=session)
-        if request.method=='POST':
+        if request.method == 'POST':
             data = request.form.to_dict()
-            category.name=data['name']
-            category.slug=data['slug']
+            category.name = data['name']
+            category.slug = data['slug']
             database.db_session.commit()
             return app.redirect('/admin/categories')
     else:
