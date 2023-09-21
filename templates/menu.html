@@ -5,12 +5,12 @@
         {% for dish in dishes %}
             <div class="column">
                 <div class="card">
-                    <img src="{{ dish.Image }}" alt="{{ dish.dish_name }}" style="width:100%">
-                    <a href="{{ url_for("get_dish_from_category", category_name=dish.slug, dish_id=dish.id) }}">
+                    <img src="{{ dish.photo }}" alt="{{ dish.dish_name }}" style="width:100%">
+                    <a href="{{ url_for("get_dish_from_category", category_name=dish.category_info.slug, dish_id=dish.id) }}">
                         <h1>{{ dish.dish_name }}</h1></a>
                     <p class="price">{{ dish.price }}</p>
-                    <a href="{{ url_for("get_category", category_name=dish.slug) }}">
-                        <p>{{ dish.name }}</p></a>
+                    <a href="{{ url_for("get_category", category_name=dish.category_info.slug) }}">
+                        <p>{{ dish.category_info.name }}</p></a>
                     <p>{{ dish.description }}</p>
                     <p>
                     <form method="POST" action="/cart/add">
