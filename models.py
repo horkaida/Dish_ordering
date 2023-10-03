@@ -1,8 +1,7 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Float
+from sqlalchemy import Column, Integer, String, ForeignKey, Float, Boolean
 
 from database import Base
 from sqlalchemy.orm import relationship
-
 
 class User_type(Base):
     __tablename__ = 'User_types'
@@ -24,7 +23,7 @@ class User(Base):
     first_name = Column(String(50))
     second_name = Column(String(50))
     address = relationship('Address', back_populates='user_info')
-
+    verified = Column(Boolean, default=False)
     def __init__(self, phone=None, email=None, password=None, first_name=None, second_name=None):
         self.phone = phone
         self.email = email
@@ -184,3 +183,9 @@ class Dish_rate(Base):
         return f'<Dish_rate {self.id}>'
     def __repr__(self):
         return self.__str__()
+
+class Email_Verification(Base):
+    __tablename__ = 'Email_Verification'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('Users.id'))
+    verification_code = Column(String(200), nullable=False)

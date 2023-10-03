@@ -1,6 +1,7 @@
 from flask import Flask, request, session, render_template
 import database
 import models
+import uuid
 
 app = Flask(__name__)
 app.secret_key = '_5#y2L"F4Q8zfdvdhbfvjdvdf]/'
@@ -122,8 +123,28 @@ def user_register():
                            second_name=data['second_name'])
         database.db_session.add(user)
         database.db_session.commit()
-        return app.redirect('/login', code=302)
+        created_user = database.db_session.query(models.User).where(models.User.email == user.email).one()
+        verification = models.Email_Verification(user_id=created_user.id,
+                                                 verification_code=str(uuid.uuid4()))
+        database.db_session.add(verification)
+        database.db_session.commit()
+        return app.redirect(f'/user/register/verification/{verification.verification_code}', code=302)
     return render_template('registration.html')
+
+
+@app.route('/user/register/verification/<verification_code>', methods=['GET', 'POST'])
+def email_verification(verification_code):
+    if request.method == 'GET':
+        return render_template('verification.html')
+    if request.method == 'POST':
+        code = database.db_session.query(models.Email_Verification).where(models.Email_Verification.verification_code == verification_code).one_or_none()
+        if code:
+            user = database.db_session.query(models.User).where(models.User.id == code.user_id).one()
+            user.verified = True
+            database.db_session.commit()
+            return app.redirect('/user/login', code=302)
+        else:
+            return render_template('verification.html', error='Incorrect code')
 
 
 @app.route('/user/login', methods=['POST', 'GET'])
@@ -358,6 +379,7 @@ def admin_get_category(category_slug):
             return app.redirect('/admin/categories')
     else:
         return app.redirect('/')
+
 
 
 @app.route('/admin/search', methods=['GET'])
