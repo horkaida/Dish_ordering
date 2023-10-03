@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+    <form method="POST">
+        <input type="text" value={{ verification_code }}>
+        <button type="submit" class="registerbtn">Verify</button>
+    </form>
+    <p>
+    {% if error %}
+    	{{ error }}
+    {% endif %}
+    </p>
+{% endblock %}
