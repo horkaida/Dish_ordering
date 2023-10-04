@@ -5,6 +5,7 @@ import uuid
 
 app = Flask(__name__)
 app.secret_key = '_5#y2L"F4Q8zfdvdhbfvjdvdf]/'
+print('hello dicker')
 
 
 @app.route('/')
@@ -388,4 +389,4 @@ def search():
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host='0.0.0.0')
