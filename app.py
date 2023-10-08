@@ -155,8 +155,8 @@ def user_login():
 
     if request.method == 'POST':
         data = request.form.to_dict()
-        user = database.db_session.query(models.User).where(models.User.email == data['email']).one()
-        if user.password == data['password']:
+        user = database.db_session.query(models.User).where(models.User.email == data['email']).one_or_none()
+        if user and user.password == data['password']:
             session['id'] = user.id
             session['first_name'] = user.first_name
             session['second_name'] = user.second_name
