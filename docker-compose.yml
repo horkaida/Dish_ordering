@@ -3,3 +3,20 @@ services:
     build: .
     ports:
       - "5000:5000"
+
+  rabbit_mq:
+    image: rabbitmq:3-management
+    hostname: rabbit_mq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+
+  celery_worker:
+    build: .
+    command: celery -A celery_task worker --loglevel=INFO --purge --pool=solo
+    environment:
+      - rabbit_host=rabbit_mq
