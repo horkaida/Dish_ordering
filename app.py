@@ -2,10 +2,10 @@ from flask import Flask, request, session, render_template
 import database
 import models
 import uuid
+from celery_task import send_confirmation
 
 app = Flask(__name__)
 app.secret_key = '_5#y2L"F4Q8zfdvdhbfvjdvdf]/'
-print('hello dicker')
 
 
 @app.route('/')
@@ -66,6 +66,9 @@ def create_order():
         order.carbs = data['carbs']
         order.status = 1
         database.db_session.commit()
+
+        send_confirmation.delay('test@gmail.com')
+
         return render_template('thankYouPage.html')
 
 
